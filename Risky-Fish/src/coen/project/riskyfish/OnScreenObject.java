@@ -5,15 +5,14 @@ import java.awt.Rectangle;
 
 public abstract class OnScreenObject {
 
+	// world
+	protected World ocean;
 
 	// Restrict objects within screen
 	protected int maxY;
 	protected int minY;
 	protected int maxX;
 	protected int minX;
-
-	// world
-	protected World ocean;
 
 	// position and vector
 	protected double x;
@@ -29,37 +28,65 @@ public abstract class OnScreenObject {
 	protected int cwidth;
 	protected int cheight;
 
-	// collision
-	protected double xdest;
-	protected double ydest;
-	protected double xtemp;
-	protected double ytemp;
-
 	// Animation
 	protected Animation animation;
-	protected int currentAction;
-	protected boolean facingRight;
+	protected int currentAnimation=0;
 
-	// movement attributes
-	protected double moveSpeed;
-	protected double maxSpeed;
-	protected double minSpeed;
-	protected double gravity;
+	// Set to true if object should be drawn.
+	protected boolean isActive = false;
+
+	// When set to true, the sprite is removed from its world panel.
+	private boolean discarded = false;
+
+	// if true, object does not collide with other object except from the player
+	// fish.
+	private boolean immuneToOthers;
+
+	// Describes what should happen when hitting the top or bottom of the screen
+	/**
+	 * A value for the exitPolicy property, indicating that the sprite should
+	 * bounce off the edge of the SpritePanel when it hits it. The sprite will
+	 * not move outside the panel. This is the default behavior for a sprite.
+	 */
+	public static final int EXIT_POLICY_BOUNCE = 0;
+	/**
+	 * A value for the exitPolicy property, indicating that the sprite should
+	 * die when it moves outside the SpritePanel. This is the default policy for
+	 * the player fish.
+	 */
+	public static final int EXIT_POLICY_DIE = 1;
+	/**
+	 * Determines what happens to the sprite when it hits the top or bottom of
+	 * the screen
+	 */
+	private int exitPolicy = EXIT_POLICY_BOUNCE;
 
 	// constructor
 	public OnScreenObject(World ocean) {
 		this.ocean = ocean;
+		this.immuneToOthers = false;
+		this.minX = ocean.getXmin();
+		this.minY = ocean.getYmin();
+		this.maxX = ocean.getXmax();
+		this.maxY = ocean.getXmax();
 		animation = new Animation();
-		facingRight = true;
 
 	}
-	
-	protected void setBounds(){
-		//must be called after setting height (end of constructor)
-		maxY = GamePanel.HEIGHT - this.height;
-		minY = 0;
-		maxX = GamePanel.WIDTH;
-		minX = 0;
+
+	protected void setActive(boolean active) {
+		this.isActive = active;
+	}
+
+	protected void setBounds() {
+		// must be called after setting height (end of constructor)
+		maxY = this.getParent().getYmax() - this.height;
+		minY = this.getParent().getYmin();
+		maxX = this.getParent().getXmax() - this.width;
+		minX = this.getParent().getXmin();
+	}
+
+	public World getParent() {
+		return ocean;
 	}
 
 	public boolean intersects(OnScreenObject other) {
@@ -86,20 +113,12 @@ public abstract class OnScreenObject {
 		return new Rectangle((int) x, (int) y, cwidth, cheight);
 	}
 
-	public void checkTopBottomCollision() {
-		xdest = x + dx;
-		ydest = y + dy;
-
-		xtemp = x;
-		ytemp = y;
+	public double getx() {
+		return x;
 	}
 
-	public int getx() {
-		return (int) x;
-	}
-
-	public int gety() {
-		return (int) y;
+	public double gety() {
+		return y;
 	}
 
 	public int getWidth() {
@@ -118,10 +137,6 @@ public abstract class OnScreenObject {
 		return cheight;
 	}
 
-	public boolean isFacingRight() {
-		return facingRight;
-	}
-
 	public void setPosition(double x, double y) {
 		this.x = x;
 		this.y = y;
@@ -136,12 +151,62 @@ public abstract class OnScreenObject {
 		return x + width < 0 || x - width > GamePanel.WIDTH || y + height < 0 || y - height > GamePanel.HEIGHT;
 	}
 
+	public void worldBoundsCollision() {
+
+	}
+
+	public void discard() {
+		this.discarded = true;
+		onDeath();
+	}
+
+	private void onDeath() {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void update() {
+		if (isActive) {
+			// update objects position
+			x += dx;
+			y += dy;
+
+			double left = x;
+			double top = y;
+			double right = x + width;
+			double bottom = y + height;
+
+			if (dx == 0 && dy == 0) {
+				return;
+			} else {
+				switch (exitPolicy) {
+				case EXIT_POLICY_BOUNCE:
+					if (bottom > ocean.getHeight()) {
+						dy = -Math.abs(dy);
+						y = y - (bottom - ocean.getHeight());
+					}
+					if (top < 0) {
+						dy = Math.abs(dy);
+						y = y - top;
+					}
+					if (right <= 0) {
+						discard();
+					}
+					break;
+				case EXIT_POLICY_DIE:
+					if (left <= ocean.getXmin() || bottom >= ocean.getYmax() || top <= ocean.getYmin())
+						discard();
+					break;
+				}
+			}
+			// update it's animation to the next image
+			this.animation.update();
+		}
+	}
+
 	public void draw(Graphics g) {
-		if (facingRight) {
+		if (isActive) {
 			g.drawImage(animation.getImage(), (int) (x), (int) (y), null);
-		} else {
-			g.drawImage(animation.getImage(), (int) (x + width), (int) (y ), -width, height,
-					null);
 		}
 		Rectangle r = getRectangle();
 		g.drawRect(r.x, r.y, r.width, r.height);

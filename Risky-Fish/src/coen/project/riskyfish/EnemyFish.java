@@ -41,7 +41,7 @@ public class EnemyFish extends OnScreenObject {
 		super(ocean);
 
 		this.enemyType = type;
-		this.setSpeed(ocean.getScrollingSpeed());
+		this.setSpeed(getParent().getSpeed());
 
 		init(enemyType);
 	}

@@ -89,8 +89,6 @@ public class PlayerFish extends OnScreenObject {
 
 		setGravityFactor(type);
 
-		// To adjust sprite direction
-		facingRight = true;
 
 		try {
 			SpriteSheet spritesSheet = new SpriteSheet(ImageLoader.loadImage(FISH_SPRITE_SHEET));
@@ -132,11 +130,11 @@ public class PlayerFish extends OnScreenObject {
 	}
 
 	private void setAnimation(int i) {
-		currentAction = i;
-		animation.setFrames(sprites.get(currentAction));
-		animation.setDelay(SPRITEDELAYS[currentAction]);
-		width = FRAMEWIDTHS[currentAction];
-		height = FRAMEHEIGHTS[currentAction];
+		currentAnimation = i;
+		animation.setFrames(sprites.get(currentAnimation));
+		animation.setDelay(SPRITEDELAYS[currentAnimation]);
+		width = FRAMEWIDTHS[currentAnimation];
+		height = FRAMEHEIGHTS[currentAnimation];
 	}
 
 	public void setLives(int i) {
@@ -180,7 +178,7 @@ public class PlayerFish extends OnScreenObject {
 	}
 
 	private void updateDistanceTravelled() {
-		distanceTravelled += (-ocean.getScrollingSpeed());
+		distanceTravelled += (-this.getParent().getSpeed());
 	}
 
 	public void update() {
@@ -190,7 +188,7 @@ public class PlayerFish extends OnScreenObject {
 
 		// update speedX
 		if (time % 100 == 0) {
-			ocean.setScrollingSpeed(ocean.getScrollingSpeed() - 0.1);
+			this.getParent().setSpeed(this.getParent().getSpeed() - 0.1);
 		}
 
 		// update position
@@ -208,14 +206,14 @@ public class PlayerFish extends OnScreenObject {
 
 		// set Animation by priority
 		if (isEating) {
-			if (currentAction != EATING) {
+			if (currentAnimation != EATING) {
 				setAnimation(EATING);
 			}
 		} else if (isDead) {
-			if (currentAction != DEAD) {
+			if (currentAnimation != DEAD) {
 				setAnimation(DEAD);
 			}
-		} else if (currentAction != IDLE) {
+		} else if (currentAnimation != IDLE) {
 			setAnimation(IDLE);
 		}
 		animation.update();
@@ -255,9 +253,8 @@ public class PlayerFish extends OnScreenObject {
 	}
 
 	public void reset() {
-		facingRight = true;
 		isFlinching = false;
-		currentAction = -1;
+		currentAnimation = -1;
 	}
 
 	public void draw(Graphics g) {

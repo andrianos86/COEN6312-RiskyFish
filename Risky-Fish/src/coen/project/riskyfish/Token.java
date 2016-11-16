@@ -146,7 +146,7 @@ public class Token extends Obstacle {
 
 	public void update() {
 		// Move to the left
-		setSpeed(ocean.getScrollingSpeed());
+		setSpeed(getParent().getSpeed());
 		if (this.isActive()) {
 			if (this.notOnScreen()) {
 				this.setVisible(false);

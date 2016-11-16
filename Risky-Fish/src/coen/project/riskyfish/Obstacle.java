@@ -61,7 +61,7 @@ public class Obstacle extends OnScreenObject {
 		super(ocean);
 
 		this.obstacleType = type;
-		this.setSpeed(ocean.getScrollingSpeed());
+		this.setSpeed(this.getParent().getSpeed());
 
 		init(obstacleType);
 
@@ -208,7 +208,7 @@ public class Obstacle extends OnScreenObject {
 	 * 
 	 */
 	protected void setAnimation() {
-		currentAction = 0; // only one action implemented 'idle'
+		currentAnimation = 0; // only one action implemented 'idle'
 		animation.setFrames(sprites);
 		animation.setDelay(sritedelay);
 		width = framewidth;
@@ -220,8 +220,8 @@ public class Obstacle extends OnScreenObject {
 	 */
 	public void update() {
 		// Move to the left
-		setSpeed(ocean.getScrollingSpeed());
-
+		setSpeed(getParent().getSpeed());
+		
 		if (this.isActive()) {
 			if (this.notOnScreen()) {
 				this.setVisible(false);

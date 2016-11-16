@@ -39,7 +39,8 @@ public class GamePlayState extends GameState {
 
 	public GamePlayState(GameStateManager gsm) {
 		super(gsm);
-		ocean = new World(GamePanel.WIDTH, GamePanel.HEIGHT, 2, -2.0);
+		ocean = new World(GamePanel.WIDTH, GamePanel.HEIGHT);
+		ocean.setSpeed(-2.0);
 		init();
 
 	}

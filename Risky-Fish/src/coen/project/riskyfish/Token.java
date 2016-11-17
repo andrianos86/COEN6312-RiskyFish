@@ -1,186 +1,117 @@
 package coen.project.riskyfish;
 
-import java.awt.Color;
-import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.Random;
 
-import coen.project.riskyfish.gfx.ImageLoader;
-import coen.project.riskyfish.gfx.SpriteSheet;
+public class Token extends OnScreenObject {
 
-public class Token extends Obstacle {
+	/**
+	 * identifies the type of token to one of: SHELL,FOOD, FEMALE
+	 */
+	private objType tokenType;
+	/**
+	 * Specifies the delay between animation frames. Default value for token is
+	 * 10 corresponding to 10 animation update calls before changing frames.
+	 */
+	private int animationDelay = 10;
 
-	private static final String TOKEN_SHEET = "/textures/token_sprites.png";
+	/**
+	 * The reward awarded if player collects the token.
+	 */
+	private RewardType reward;
 
-	// Type of animated token
-	public static final int FOOD = 0;
-	public static final int FEMALE = 1;
-	public static final int SHELL = 2;
-	// Identifier
-	public int tokenType;
+	/**
+	 * Identifies if token has been collected by the player.
+	 */
+	private boolean collected = false;
 
-	// frames and properties of each player fish animation
-	private ArrayList<BufferedImage[]> sprites;
-	private final int[] NUMFRAMES = { 2, 2, 2 };
-	private final int[] FRAMEWIDTHS = { 55, 55, 55 };
-	private final int[] FRAMEHEIGHTS = { 55, 55, 55 };
-	private final int[] SPRITEDELAYS = { 5, 5, 5 };
+	/**
+	 * An array of images containing the sprite images of the token
+	 */
+	private BufferedImage[] spriteImages;
 
-	// Font for token award
-	Font t_font = new Font("TimesRoman", Font.PLAIN, 18);
+	public Token(World oceanPanel, objType type) {
+		// initialize token off screen.
+		super(oceanPanel);
 
-	// Random token generator
-	Random generator = new Random();
+		this.setVelocityVector(0, oceanPanel.getSpeed());
 
-	private int slowdownDuration;
-	private int livesRewarded;
+		this.tokenType = type;
+		this.reward = new RewardType(this.tokenType);
 
-	public Token(World ocean) {
-		super(ocean, Obstacle.TOKEN);
+		this.setSpriteImages(type);
 
-		tokenType = getNextToken();
-		init(tokenType);
+		this.setAnimation(spriteImages, animationDelay);
 
-		spawnRandomly();
+		this.setMovingBounds();
+		this.setOffScreenPolicy(EXIT_POLICY_BOUNCE);
+
+		this.setImmuneToOthers(true);
+
+		// place token at random depth outside viewable part of the world
+		this.spawn(this.getParent().getYmin(), this.getParent().getYmax(), this.getParent().getXmin(),
+				this.getParent().getXmax());
+		// token ready to be drawn
+		this.setActive(true);
+
 	}
 
-	public int getNextToken() {
+	/**
+	 * Loads the token sprite images to be used for the animation, and sets the
+	 * token's dimensions as per it's image.
+	 */
+	private void setSpriteImages(objType tokenType) {
 
-		// Start at any location starting outside right edge up to 10 times the
-		// screen size
-		tokenType = generator.nextInt(3);
-		randomizeAward();
+		switch (tokenType) {
+		case FOOD_TKN:
+			this.spriteImages = SpriteContent.token[0];
+			break;
+		case FEMALE_TKN:
+			this.spriteImages = SpriteContent.token[1];
+			break;
+		case SHELL_TKN:
+			this.spriteImages = SpriteContent.token[2];
+			break;
+		default:
+			System.out.println("Wrong object type enum for token");
+			break;
+		}
 
-		return tokenType;
+		this.setHeight(55);
+		this.setWidth(55);
+		this.setCHeight(55);
+		this.setCWidth(55);
+
 	}
 
-	public void spawnRandomly() {
-		setAnimation(tokenType);
-
-		// generate random position
-		// tokens are rarely generated once player travels 5x the screen size
-		this.x = generator.nextInt(5 * this.maxX) + maxX;
-		this.y = generator.nextInt(this.maxY);
-
-		int flipCoin = generator.nextInt(5);
-
-		if (flipCoin == 0) {
-			setActive(false);
-			setVisible(false);
+	public RewardType collectToken() {
+		if (this.collected) {
+			// if already collected don't give extra reward
+			return new RewardType(0, 0, false);
 		} else {
-			setActive(true);
-			setVisible(false);
-		}
+			// stop drawing token
+			this.setActive(false);
+			this.collected = true;
+			// remove token from world
+			this.discard();
 
-	}
-
-	private void randomizeAward() {
-		if (tokenType == Token.SHELL) {
-			// shell tokens add from 1 to 100 points
-			this.pointsToAward = generator.nextInt(100) + 1;
-			this.slowdownDuration = 0;
-
-		}
-		if (tokenType == Token.FEMALE) {
-			// Slow down for 5 to 20 seconds
-			this.slowdownDuration = generator.nextInt(15) + 5;
-			this.pointsToAward = 0;
-		}
-		if (tokenType == Token.FOOD) {
-			// Award 1 to 5 lives.
-			this.livesRewarded = generator.nextInt(4) + 1;
-			this.pointsToAward = 0;
-			this.slowdownDuration = 0;
+			return reward;
 		}
 	}
 
-	private void init(int tokenType) {
-		if (obstacleType == Obstacle.TOKEN) {
-			this.isDeadly = false;
-			this.isPoisonous = false;
-			this.isCollectable = true;
-		}
-		try {
-			SpriteSheet spritesSheet = new SpriteSheet(ImageLoader.loadImage(TOKEN_SHEET));
-
-			int count = 0;
-			sprites = new ArrayList<BufferedImage[]>();
-			for (int i = 0; i < NUMFRAMES.length; i++) {
-				BufferedImage[] bi = new BufferedImage[NUMFRAMES[i]];
-				for (int j = 0; j < NUMFRAMES[i]; j++) {
-					bi[j] = spritesSheet.crop(j * FRAMEWIDTHS[i], count, FRAMEWIDTHS[i], FRAMEHEIGHTS[i]);
-				}
-				sprites.add(bi);
-				count += FRAMEHEIGHTS[i];
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		setAnimation(this.tokenType);
-		setBounds();
-		// Collision box dimensions
-		cwidth = width;
-		cheight = height;
-
-		this.isDeadly = false;
-		this.isPoisonous = false;
-		this.isCollectable = true;
-	}
-
-	private void setAnimation(int tokenType) {
-		animation.setFrames(sprites.get(tokenType));
-		animation.setDelay(SPRITEDELAYS[tokenType]);
-		width = FRAMEWIDTHS[tokenType];
-		height = FRAMEHEIGHTS[tokenType];
-	}
-
-	public void collect() {
-		this.setActive(false);
-		this.setVisible(false);
-		this.getNextToken();
-		this.spawnRandomly();
+	public boolean isCollected() {
+		return collected;
 	}
 
 	public void update() {
-		// Move to the left
-		setSpeed(getParent().getSpeed());
-		if (this.isActive()) {
-			if (this.notOnScreen()) {
-				this.setVisible(false);
-			} else {
-				this.setVisible(true);
-			}
-		} else {
-			// if it is not active it is not visible either
-			this.setVisible(false);
-		}
-		x += speed;
-
-		animation.update();
+		this.setVelocityVector(this.getParent().getSpeed(), 0);
+		super.update();
 	}
 
-	public void draw(Graphics g) {
-		super.draw(g);
-		if (this.isActive() & this.isVisible()) {
-			Font prevFont = g.getFont();
-			Color prevColor = g.getColor();
-			g.setFont(t_font);
-			g.setColor(Color.WHITE);
+	public void draw(Graphics g, boolean debug) {
 
-			if (this.tokenType == Token.FEMALE) {
-				g.drawString(this.slowdownDuration + " sec.", (int) this.x + this.width + 1, (int) this.y + this.height/2);
-			}
-			if (this.tokenType == Token.SHELL) {
-				g.drawString(this.pointsToAward + " points", (int) this.x + this.width + 1, (int) this.y + this.height/2);
-			}
-			if (this.tokenType == Token.FOOD) {
-				g.drawString(this.livesRewarded + " lives", (int) this.x + this.width + 1, (int) this.y + this.height/2);
-			}
-			g.setFont(prevFont);
-			g.setColor(prevColor);
+		if (this.isVisible() && this.isActive()) {
+			super.draw(g, debug);
 		}
 	}
 

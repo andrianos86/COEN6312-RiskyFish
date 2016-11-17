@@ -6,6 +6,7 @@ import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Random;
 
 import coen.project.riskyfish.PlayerFish;
@@ -14,45 +15,50 @@ import coen.project.riskyfish.EnemyFish;
 import coen.project.riskyfish.GamePanel;
 import coen.project.riskyfish.Obstacle;
 import coen.project.riskyfish.World;
+import coen.project.riskyfish.objType;
 
 public class GamePlayState extends GameState {
 
+	// Define instance variables for the game objects
 	private PlayerFish playerFish;
-	private World ocean;
-
 	private ArrayList<Obstacle> obstacles;
 	private ArrayList<EnemyFish> enemies;
 	private ArrayList<Token> tokens;
+	private World ocean;
 
 	// Holds the current score of the level
 	private int levelScore;
 	private long timeAlive;
 	private long levelHighScore;
 
-
-	// events
-	private boolean blockUserInput = false;
-	private int count = 0; // number of events or updates
-	private boolean eventGameOver;
-	private boolean eventStart;
-
-
+	// Constructor to initialize the UI components and game objects
 	public GamePlayState(GameStateManager gsm) {
 		super(gsm);
-		ocean = new World(GamePanel.WIDTH, GamePanel.HEIGHT);
-		ocean.setSpeed(-2.0);
+		// Initialize the game objects
 		init();
+
+		// UI components
+
+		// Other UI components such as button, score board, if any.
+		// ......
 
 	}
 
-	@Override
+	// All the game related codes here
+
+	// Initialize all the game objects, run only once in the constructor of the
+	// main class.
 	public void init() {
 		levelScore = 0;
+		timeAlive = 0;
+		// levelHighScore = loadStatistics();
+
+		ocean = new World(GamePanel.WIDTH, GamePanel.HEIGHT);
+		ocean.setSpeed(-2.0);
 
 		// playerFish
 		playerFish = new PlayerFish(ocean);
 		playerFish.setPosition(60.0, 50.0);
-		// playerFish.setTimer(.getTime);
 
 		// obstacles
 		obstacles = new ArrayList<>();
@@ -69,81 +75,111 @@ public class GamePlayState extends GameState {
 		// hud
 		// hud = new HeadsUpDisplay(playerFish);
 
-		// start event
-		eventStart = true;
 		// startGame();
 
 	}
-	
+
 	// handles starting/restart the game
-	private void startGame(){
-		
+	private void startGame() {
+
 	}
-	
+
 	// handles a game over event
-	private void endGame(){
-		
+	private void endGame() {
+
 	}
 
 	private void populateTokens() {
-		Token randomToken = new Token(ocean);
-		tokens.add(randomToken);
+		if (tokens.isEmpty()) {
+			Token foodTkn = new Token(ocean, objType.FOOD_TKN);
+			Token femaleTkn = new Token(ocean, objType.FEMALE_TKN);
+			Token shellTkn = new Token(ocean, objType.SHELL_TKN);
+			tokens.add(foodTkn);
+			tokens.add(femaleTkn);
+			tokens.add(shellTkn);
+		} else {
+			for (Token t : tokens) {
+				t.update();
+				if (t.isCollected() || t.isDiscarded()) {
+					t = null;
+				}
+			}
+			tokens.removeAll(Collections.singleton(null));
+
+		}
+
 	}
 
 	private void populateObstacles() {
-		Obstacle seaWeed = new Obstacle(ocean, Obstacle.SEEWEED);
-		Obstacle nets = new Obstacle(ocean, Obstacle.NETS);
-		obstacles.add(seaWeed);
-		obstacles.add(nets);
+		if (obstacles.isEmpty()) {
+			Obstacle seaWeed = new Obstacle(ocean, objType.SEAWEED);
+			Obstacle nets = new Obstacle(ocean, objType.NETS);
+			obstacles.clear();
+			obstacles.add(seaWeed);
+			obstacles.add(nets);
+		} else {
+			for (Obstacle o : obstacles) {
+				o.update();
+				if (o.isDiscarded()) {
+					o = null;
+				}
+			}
+			obstacles.removeAll(Collections.singleton(null));
+		}
 	}
 
 	private void populateEnemies() {
-		// enemies.clear();
+		if (enemies.isEmpty()) {
+			EnemyFish predator = new EnemyFish(ocean, objType.PREDATOR);
+			EnemyFish jellyFish = new EnemyFish(ocean, objType.JELLYFISH);
+			enemies.clear();
+			enemies.add(predator);
+			enemies.add(jellyFish);
+		} else {
+			for (EnemyFish e : enemies) {
+				e.update();
+				if (e.isDiscarded()) {
+					e = null;
+				}
+			}
+			enemies.removeAll(Collections.singleton(null));
+		}
 	}
 
 	@Override
 	public void update() {
 
 		// check if playerFish dead event should start
-		if (playerFish.getLives() <= 0 || playerFish.gety() > GamePanel.HEIGHT || (playerFish.gety() -playerFish.getHeight()) < 0) {
-			eventGameOver = true;
-			blockUserInput = true;
+		if (playerFish.isDiscarded()){
+			//eventGameOver = true;
+			//blockUserInput = true;
 		}
-
-		// playerFish events
-		// if(eventStart) startGame();
-		// if(eventGameOver) endGame();
 
 		// Update ocean world
-		if (ocean.getBackground() != null) {
-			ocean.update();
-		}
-
+		ocean.update();
 		// move playerFish
 		playerFish.update();
-
 
 		// move obstacles
 		for (int i = 0; i < obstacles.size(); i++) {
 			obstacles.get(i).update();
 
-			if (obstacles.get(i).isPastWindowEdge()) {
-				obstacles.get(i).spawnRandomly();
+			if (obstacles.get(i).isDiscarded()) {
 				int points = obstacles.get(i).getPoints();
 				this.addToScore(points);
+				obstacles.set(i, null);
 			}
 		}
 
 		// move tokens
-		for(Token t:tokens){
+		for (Token t : tokens) {
 			t.update();
-			if(t.isPastWindowEdge()){
-				t.getNextToken();
-				t.spawnRandomly();
+			if (t.isDiscarded()) {
+				t = null;
 			}
 			if (t.isVisible()) {
 				if (playerFish.intersects(t)) {
-					t.collect();
+					t.collectToken();
 					System.out.println("yey!");
 				}
 
@@ -151,7 +187,6 @@ public class GamePlayState extends GameState {
 		}
 		// check for collisions
 		determinColisions();
-
 
 	}
 
@@ -168,26 +203,25 @@ public class GamePlayState extends GameState {
 
 		// draw obstacles
 		for (Obstacle o : obstacles) {
-			o.draw(g);
+			o.draw(g, true);
 		}
 		// draw tokens
-		for(Token t:tokens){
-			t.draw(g);
+		for (Token t : tokens) {
+			t.draw(g,true);
 		}
 
 		// draw playerFish
-		playerFish.draw(g);
+		playerFish.draw(g,true);
 
-		//draw HUD
+		// draw HUD
 		this.drawHUD(g);
-		g.drawString(playerFish.getTimeToString(), 750, 480);
 
 	}
 
-
 	private void drawHUD(Graphics g) {
-		
-	    }
+		g.drawString("Time: "+playerFish.getTimeToString()+"Score: " + playerFish.getScore(), 750, 480);
+
+	}
 
 	@Override
 	public void keyPressed(int k) {
@@ -212,14 +246,12 @@ public class GamePlayState extends GameState {
 		levelScore += points;
 	}
 
-	public int getLevelScore(){
+	public int getLevelScore() {
 		return levelScore;
 	}
 
 	public PlayerFish getFish() {
 		return playerFish;
 	}
-
-
 
 }

@@ -9,9 +9,6 @@ import coen.project.riskyfish.gfx.SpriteSheet;
 
 public class PlayerFish extends OnScreenObject {
 
-	// Spreadsheet resource location
-	private static final String FISH_SPRITE_SHEET = "/textures/fish_sprite1.png";
-
 	// Limit the bounds of the fish vertical speed
 	private final int MIN_DY = 0;
 	private final int MAX_DY = 10;
@@ -59,12 +56,8 @@ public class PlayerFish extends OnScreenObject {
 	// player is poisoned from seaweed
 	private boolean isPoisoned;
 
-	// frames and properties of each player fish animation
-	private ArrayList<BufferedImage[]> sprites;
-	private final int[] NUMFRAMES = { 7, 7, 0 };
-	private final int[] FRAMEWIDTHS = { 57, 57, 57 };
-	private final int[] FRAMEHEIGHTS = { 57, 57, 57 };
-	private final int[] SPRITEDELAYS = { 5, 5, 3 };
+	// Animation frames each player fish action
+	private BufferedImage[] sprites;
 
 	// animated actions
 	private static final int IDLE = 0;
@@ -80,40 +73,44 @@ public class PlayerFish extends OnScreenObject {
 		isDead = false;
 		isBitten = false;
 		isPoisoned = false;
+		this.setActive(true);
+
 		this.type = fish_type;
 		// Collision box dimensions
-		cwidth = 57;
-		cheight = 57;
+		// Collision box dimensions
+		this.setCWidth(57);
+		this.setCHeight(57);
+		this.setWidth(57);
+		this.setHeight(57);
 
-		lives = 3;
-
+		this.setLives(3);
+		setImmuneToOthers(false);
 		setGravityFactor(type);
 
+		sprites = SpriteContent.playerFish[IDLE];
 
-		try {
-			SpriteSheet spritesSheet = new SpriteSheet(ImageLoader.loadImage(FISH_SPRITE_SHEET));
-
-			int count = 0;
-			sprites = new ArrayList<BufferedImage[]>();
-			for (int i = 0; i < NUMFRAMES.length; i++) {
-				BufferedImage[] bi = new BufferedImage[NUMFRAMES[i]];
-				for (int j = 0; j < NUMFRAMES[i]; j++) {
-					bi[j] = spritesSheet.crop(j * FRAMEWIDTHS[i], count, FRAMEWIDTHS[i], FRAMEHEIGHTS[i]);
-				}
-				sprites.add(bi);
-				count += FRAMEHEIGHTS[i];
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		setAnimation(IDLE);
-		setBounds();
+		setAnimation(sprites, 5);
+		setMovingBounds();
 	}
 
 	public PlayerFish(World ocean) {
 		this(ocean, PlayerFish.TYPE_II);
+	}
+	
+	private void setSprites(int currentState){
+		switch (currentState) {
+		case IDLE:
+			this.sprites = SpriteContent.playerFish[IDLE];
+			break;	
+		default:
+			System.out.println("Wrong object type enum for token");
+			break;
+		}
+		this.setHeight(55);
+		this.setWidth(55);
+		this.setCHeight(55);
+		this.setCWidth(55);
+
 	}
 
 	private void setGravityFactor(int fish_type) {
@@ -127,14 +124,6 @@ public class PlayerFish extends OnScreenObject {
 		default:
 			this.gravityFactor = 0.03f;
 		}
-	}
-
-	private void setAnimation(int i) {
-		currentAnimation = i;
-		animation.setFrames(sprites.get(currentAnimation));
-		animation.setDelay(SPRITEDELAYS[currentAnimation]);
-		width = FRAMEWIDTHS[currentAnimation];
-		height = FRAMEHEIGHTS[currentAnimation];
 	}
 
 	public void setLives(int i) {
@@ -193,7 +182,7 @@ public class PlayerFish extends OnScreenObject {
 
 		// update position
 		getNextPosition();
-		// checkTopBottomCollision();
+		this.worldBoundsCollision();
 		setPosition(x, y);
 
 		// check if player should flicker
@@ -207,14 +196,14 @@ public class PlayerFish extends OnScreenObject {
 		// set Animation by priority
 		if (isEating) {
 			if (currentAnimation != EATING) {
-				setAnimation(EATING);
+				setAnimation(sprites, 1);
 			}
 		} else if (isDead) {
 			if (currentAnimation != DEAD) {
-				setAnimation(DEAD);
+				setAnimation(sprites, 1);
 			}
 		} else if (currentAnimation != IDLE) {
-			setAnimation(IDLE);
+			setAnimation(sprites, 1);
 		}
 		animation.update();
 
@@ -257,7 +246,7 @@ public class PlayerFish extends OnScreenObject {
 		currentAnimation = -1;
 	}
 
-	public void draw(Graphics g) {
+	public void draw(Graphics g, boolean mbr) {
 		// draw player
 		if (isFlinching) {
 			long elapsed = (System.nanoTime() - flinchTimer) / 1000000;
@@ -266,7 +255,7 @@ public class PlayerFish extends OnScreenObject {
 				return; // blink every 100ms
 			}
 		}
-		super.draw(g);
+		super.draw(g, mbr);
 	}
 
 }

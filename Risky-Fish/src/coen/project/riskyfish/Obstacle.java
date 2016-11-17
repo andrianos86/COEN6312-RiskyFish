@@ -2,253 +2,116 @@ package coen.project.riskyfish;
 
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
-import java.util.Random;
 
-import coen.project.riskyfish.gfx.ImageLoader;
-import coen.project.riskyfish.gfx.SpriteSheet;
-
-/*
- * Description:
- * Obstacle objects do not move (they only move at the speed of the ocean world).
- * Obstacle objects do not allow the player to pass through them.
- * Obstacle objects have a dedicated y coordinate where they are located on the ocean world.
- * Instances of the obstacle class can have different heights..
- */
 /**
- * @author Andrianos
+ * Description: Obstacle objects do not move (they only move at the speed of the
+ * ocean world). Obstacle objects have a dedicated y coordinate where they are
+ * located on the ocean world (y does not change once object is created).
  *
  */
 public class Obstacle extends OnScreenObject {
 
-	private static final String SEAWEED_SPRITE_SHEET = "/textures/seaweed.png";
-	private static final String NETS_SPRITE_SHEET = "/textures/nets.png";
-
-	private int numframes = 1;
-	private int framewidth = 150;
-	private int frameheight;
-	private int sritedelay = 1;
-
-	// Types of obstacles
-	public static final int NETS = 0;
-	public static final int SEEWEED = 1;
-	public static final int TOKEN = 2;
-
 	// identifier
-	protected int obstacleType;
-	protected double speed;
+	protected objType obstacleType;
 
-	protected BufferedImage[] sprites;
-	protected String spritePath;
+	/**
+	 * An array of images containing the sprite images of the token
+	 */
+	private BufferedImage[] spriteImages;
 
-	// points earned for avoiding obstacle
+	/**
+	 * Points earned for avoiding obstacle
+	 */
 	protected int pointsToAward;
 
-	// Determine if obstacle will be displayed and interact with player
-	public boolean active = true;
-	boolean visible = false;
-
-	// type of event when colliding with object
+	/**
+	 * Type of event trigger when colliding with object
+	 */
 	protected boolean isDeadly;
 	protected boolean isPoisonous;
-	protected boolean isCollectable;
-	
 
 	/**
-	 * @param ocean
-	 * @param type
+	 * Specifies the delay between animation frames. Default value for token is
+	 * 10 corresponding to 10 animation update calls before changing frames.
 	 */
-	public Obstacle(World ocean, int type) {
-		super(ocean);
+	private int animationDelay;
 
+	/**
+	 * @param oceanPanel
+	 * @param obsticleType
+	 */
+	public Obstacle(World oceanPanel, objType type) {
+		super(oceanPanel);
+		this.setActive(false);
 		this.obstacleType = type;
-		this.setSpeed(this.getParent().getSpeed());
+		this.setSpriteImages(type);
+		this.setAnimation(spriteImages, animationDelay);
+		this.setMovingBounds();
+		this.setImmuneToOthers(true);
 
-		init(obstacleType);
+		// Obstacles only move towards the playerFish
+		this.setOffScreenPolicy(EXIT_POLICY_BOUNCE);
+		this.setVelocityVector(oceanPanel.getSpeed(), 0);
+		this.spawn(this.getParent().getYmin(), this.getParent().getYmax(), this.getParent().getXmin(), this.getParent().getXmin());
 
-	}
-
-	private void init(int obstacleType) {
-		if (obstacleType == Obstacle.SEEWEED || obstacleType == Obstacle.NETS) {
-			if (obstacleType == Obstacle.SEEWEED) {
-				this.isDeadly = false;
-				this.isPoisonous = true;
-				this.pointsToAward = 10;
-				this.isCollectable = false;
-				spritePath = SEAWEED_SPRITE_SHEET;
-				frameheight = 150;
-			} else if (obstacleType == Obstacle.NETS) {
-				this.isDeadly = true;
-				this.isPoisonous = false;
-				this.isCollectable = false;
-
-				spritePath = NETS_SPRITE_SHEET;
-				this.pointsToAward = 20;
-				frameheight = 215;
-			}
-			try {
-				SpriteSheet spritesSheet = new SpriteSheet(ImageLoader.loadImage(spritePath));
-
-				sprites = new BufferedImage[numframes];
-				for (int i = 0; i < sprites.length; i++) {
-					sprites[i] = spritesSheet.crop(i * numframes, 0, framewidth, frameheight);
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-
-			animation.setFrames(sprites);
-			animation.setDelay(sritedelay);
-
-			setAnimation();
-			setBounds();
-			// Collision box dimensions
-			cwidth = width;
-			cheight = height;
-
-			// Spawn first seaweed at random location outside right edge of the
-			// screen
-
-			this.spawnRandomly();
-
-		} else {
-			// If token set basic obstacle properties
-			this.isDeadly = false;
-			this.isPoisonous = false;
-			this.isCollectable = true;
-
-		}
 	}
 
 	/**
-	 * 
+	 * Loads the token sprite images to be used for the animation, and sets the
+	 * token's dimensions as per it's image.
 	 */
-	public void spawnRandomly() {
-		if (this.obstacleType == SEEWEED) {
-			y = maxY;
-		}
-		if (this.obstacleType == NETS) {
-			y = minY;
-		}
-		Random generator = new Random();
+	private void setSpriteImages(objType obstacleType) {
 
-		// Start at any location starting outside right edge up to 10 times the
-		// screen size
-		x = generator.nextInt(2 * maxX) + maxX;
+		switch (obstacleType) {
+		case SEAWEED:
+			this.spriteImages = SpriteContent.seaweed[0];
+			this.setHeight(150);
+			this.setWidth(150);
+			this.setCHeight(150);
+			this.setCWidth(150);
+			animationDelay = 10;
+			break;
+		case NETS:
+			this.spriteImages = SpriteContent.nets[0];
+			this.setHeight(215);
+			this.setWidth(150);
+			this.setCHeight(215);
+			this.setCWidth(150);
+			animationDelay = 10;
+			break;
 
-		int flipCoin = generator.nextInt(3);
-
-		if (flipCoin == 0) {
-			setActive(false);
-			setVisible(false);
-		} else {
-			setActive(true);
-			setVisible(false);
+		default:
+			System.out.println("Wrong object type enum for obstacle");
+			this.setHeight(50);
+			this.setWidth(50);
+			this.setCHeight(50);
+			this.setCWidth(50);
+			animationDelay = -1;
+			break;
 		}
 
 	}
 
-	/**
-	 * @return
-	 */
-	public boolean isPastWindowEdge() {
-		int rightEdgeX = (int) (x + width);
-		return rightEdgeX < 0;
-	}
-
-	/**
-	 * @param d
-	 */
-	public void setSpeed(double d) {
-		speed = d;
-	}
-
-	/**
-	 * @return
-	 */
-	public double getSpeed() {
-		return speed;
-	}
-
-	/**
-	 * @return
-	 */
 	public int getPoints() {
 		return this.pointsToAward;
 	}
 
 	/**
-	 * @return
-	 */
-	public boolean isActive() {
-		return active;
-	}
-
-	/**
-	 * @param active
-	 */
-	public void setActive(boolean active) {
-		this.active = active;
-	}
-
-	/**
-	 * @return
-	 */
-	public boolean isVisible() {
-		return visible;
-	}
-
-	/**
-	 * @param visible
-	 */
-	public void setVisible(boolean visible) {
-		this.visible = visible;
-	}
-
-	/**
-	 * 
-	 */
-	protected void setAnimation() {
-		currentAnimation = 0; // only one action implemented 'idle'
-		animation.setFrames(sprites);
-		animation.setDelay(sritedelay);
-		width = framewidth;
-		height = frameheight;
-	}
-
-	/**
-	 * 
+	 * Updates the obstacles velocity according to the worlds current scrolling
+	 * speed. Also updates it's animation.
 	 */
 	public void update() {
-		// Move to the left
-		setSpeed(getParent().getSpeed());
-		
-		if (this.isActive()) {
-			if (this.notOnScreen()) {
-				this.setVisible(false);
-			} else {
-				this.setVisible(true);
-			}
-		} else {
-			// if it is not active it is not visible either
-			this.setVisible(false);
-		}
-		x += speed;
-		// System.out.println("Y: "+y+", X: "+x+", Active: "+isActive()+",
-		// Visible: "+isVisible());
+		this.setVelocityVector(this.getParent().getSpeed(), 0);
+		super.update();
 
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see coen.project.riskyfish.OnScreenObject#draw(java.awt.Graphics)
+	/**
+	 * Draws object on screen
 	 */
-	public void draw(Graphics g) {
+	public void draw(Graphics g, Boolean debug) {
 
-		if (this.isVisible()) {
-			super.draw(g);
-
-		}
+		super.draw(g, debug);
 	}
 
 }

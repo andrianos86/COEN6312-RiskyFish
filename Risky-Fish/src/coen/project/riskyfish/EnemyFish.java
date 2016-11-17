@@ -7,12 +7,8 @@ import java.util.Random;
 
 public class EnemyFish extends OnScreenObject {
 
-	// Types of obstacles
-	public static final int JELLYFISH = 0;
-	public static final int PREDATOR = 1;
-
 	// identifier
-	private int enemyType;
+	private objType enemyType;
 
 
 	// sprite path
@@ -37,7 +33,7 @@ public class EnemyFish extends OnScreenObject {
 
 	protected double speed;
 
-	public EnemyFish(World ocean, int type) {
+	public EnemyFish(World ocean, objType type) {
 		super(ocean);
 
 		this.enemyType = type;
@@ -48,14 +44,14 @@ public class EnemyFish extends OnScreenObject {
 
 	private void setSpeed(double scrollingSpeed) {
 		this.speed = scrollingSpeed;
-		if(this.enemyType == EnemyFish.PREDATOR){
+		if(this.enemyType == objType.PREDATOR){
 			Random speed_generator = new Random();
 			this.speed+=speed_generator.nextInt(5)+1;
 		}
 	}
 
-	private void init(int enemyType){
-		if (enemyType == EnemyFish.JELLYFISH) {
+	private void init(objType enemyType2){
+		if (enemyType2 == objType.JELLYFISH) {
 
 		}
 	}
@@ -68,9 +64,9 @@ public class EnemyFish extends OnScreenObject {
 	}
 
 
-	public void draw(Graphics g){
+	public void draw(Graphics g, boolean mbr){
 		if (this.isVisible()) {
-			super.draw(g);
+			super.draw(g,mbr);
 
 		}
 	}

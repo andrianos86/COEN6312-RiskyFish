@@ -52,7 +52,8 @@ public class Obstacle extends OnScreenObject {
 		// Obstacles only move towards the playerFish
 		this.setOffScreenPolicy(EXIT_POLICY_BOUNCE);
 		this.setVelocityVector(oceanPanel.getSpeed(), 0);
-		this.spawn(this.getParent().getYmin(), this.getParent().getYmax(), this.getParent().getXmin(), this.getParent().getXmin());
+		//this.spawn(this.getParent().getYmin(), this.getParent().getYmax() - this.getHeight(),
+		//		this.getParent().getXmax(), 20 * this.getParent().getXmax());
 
 	}
 
@@ -101,17 +102,19 @@ public class Obstacle extends OnScreenObject {
 	 * speed. Also updates it's animation.
 	 */
 	public void update() {
-		this.setVelocityVector(this.getParent().getSpeed(), 0);
-		super.update();
-
+		if (isActive()) {
+			this.setVelocityVector(this.getParent().getSpeed(), 0);
+			super.update();
+		}
 	}
 
 	/**
 	 * Draws object on screen
 	 */
 	public void draw(Graphics g, Boolean debug) {
-
-		super.draw(g, debug);
+		if (isActive() & isVisible()) {
+			super.draw(g, debug);
+		}
 	}
 
 }

@@ -1,19 +1,15 @@
 package coen.project.riskyfish.gamestate;
 
-import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Graphics;
-import java.awt.Rectangle;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Random;
-
 import coen.project.riskyfish.PlayerFish;
 import coen.project.riskyfish.Token;
 import coen.project.riskyfish.EnemyFish;
 import coen.project.riskyfish.GamePanel;
 import coen.project.riskyfish.Obstacle;
+import coen.project.riskyfish.OnScreenObject;
 import coen.project.riskyfish.World;
 import coen.project.riskyfish.objType;
 
@@ -21,9 +17,10 @@ public class GamePlayState extends GameState {
 
 	// Define instance variables for the game objects
 	private PlayerFish playerFish;
-	private ArrayList<Obstacle> obstacles;
-	private ArrayList<EnemyFish> enemies;
-	private ArrayList<Token> tokens;
+	private ArrayList<OnScreenObject> opponents;
+	// private ArrayList<Obstacle> obstacles;
+	// private ArrayList<EnemyFish> enemies;
+	// private ArrayList<Token> tokens;
 	private World ocean;
 
 	// Holds the current score of the level
@@ -60,17 +57,9 @@ public class GamePlayState extends GameState {
 		playerFish = new PlayerFish(ocean);
 		playerFish.setPosition(60.0, 50.0);
 
-		// obstacles
-		obstacles = new ArrayList<>();
-		populateObstacles();
-
-		// Tokens
-		tokens = new ArrayList<>();
-		populateTokens();
-
-		// enemies
-		enemies = new ArrayList<>();
-		populateEnemies();
+		// Opponents
+		opponents = new ArrayList<>();
+		initializeOponents();
 
 		// hud
 		// hud = new HeadsUpDisplay(playerFish);
@@ -89,70 +78,61 @@ public class GamePlayState extends GameState {
 
 	}
 
-	private void populateTokens() {
-		if (tokens.isEmpty()) {
-			Token foodTkn = new Token(ocean, objType.FOOD_TKN);
-			Token femaleTkn = new Token(ocean, objType.FEMALE_TKN);
-			Token shellTkn = new Token(ocean, objType.SHELL_TKN);
-			tokens.add(foodTkn);
-			tokens.add(femaleTkn);
-			tokens.add(shellTkn);
-		} else {
-			for (Token t : tokens) {
-				t.update();
-				if (t.isCollected() || t.isDiscarded()) {
-					t = null;
-				}
-			}
-			tokens.removeAll(Collections.singleton(null));
+	private void initializeOponents() {
+		opponents.add(new Token(ocean, objType.FOOD_TKN));
+		opponents.add(new Token(ocean, objType.FEMALE_TKN));
+		opponents.add(new Token(ocean, objType.SHELL_TKN));
+		opponents.add(new Obstacle(ocean, objType.NETS));
+		opponents.add(new Obstacle(ocean, objType.SEAWEED));
+		opponents.add(new EnemyFish(ocean, objType.PREDATOR));
+		opponents.add(new EnemyFish(ocean, objType.JELLYFISH));
 
+		// Position opponents randomly past the right edge of the screen
+		for (OnScreenObject op : opponents) {
+			op.spawn(0.0, ocean.getHeight(), ocean.getWidth(), 10 * ocean.getWidth());
+		}
+
+		// .Opponents are ready to be updated
+		for (OnScreenObject op : opponents) {
+			op.setActive(true);
 		}
 
 	}
-
-	private void populateObstacles() {
-		if (obstacles.isEmpty()) {
-			Obstacle seaWeed = new Obstacle(ocean, objType.SEAWEED);
-			Obstacle nets = new Obstacle(ocean, objType.NETS);
-			obstacles.clear();
-			obstacles.add(seaWeed);
-			obstacles.add(nets);
-		} else {
-			for (Obstacle o : obstacles) {
-				o.update();
-				if (o.isDiscarded()) {
-					o = null;
-				}
-			}
-			obstacles.removeAll(Collections.singleton(null));
-		}
-	}
-
-	private void populateEnemies() {
-		if (enemies.isEmpty()) {
-			EnemyFish predator = new EnemyFish(ocean, objType.PREDATOR);
-			EnemyFish jellyFish = new EnemyFish(ocean, objType.JELLYFISH);
-			enemies.clear();
-			enemies.add(predator);
-			enemies.add(jellyFish);
-		} else {
-			for (EnemyFish e : enemies) {
-				e.update();
-				if (e.isDiscarded()) {
-					e = null;
-				}
-			}
-			enemies.removeAll(Collections.singleton(null));
-		}
-	}
+	/*
+	 * private void populateTokens() { if (tokens.isEmpty()) { Token foodTkn =
+	 * new Token(ocean, objType.FOOD_TKN); Token femaleTkn = new Token(ocean,
+	 * objType.FEMALE_TKN); Token shellTkn = new Token(ocean,
+	 * objType.SHELL_TKN); tokens.add(foodTkn); tokens.add(femaleTkn);
+	 * tokens.add(shellTkn); } else { for (Token t : tokens) { t.update(); if
+	 * (t.isCollected() || t.isDiscarded()) { t = null; } }
+	 * tokens.removeAll(Collections.singleton(null));
+	 * 
+	 * }
+	 * 
+	 * }
+	 * 
+	 * private void populateObstacles() { if (obstacles.isEmpty()) { Obstacle
+	 * seaWeed = new Obstacle(ocean, objType.SEAWEED); Obstacle nets = new
+	 * Obstacle(ocean, objType.NETS); obstacles.clear(); obstacles.add(seaWeed);
+	 * obstacles.add(nets); } else { for (Obstacle o : obstacles) { o.update();
+	 * if (o.isDiscarded()) { o = null; } }
+	 * obstacles.removeAll(Collections.singleton(null)); } }
+	 * 
+	 * private void populateEnemies() { if (enemies.isEmpty()) { EnemyFish
+	 * predator = new EnemyFish(ocean, objType.PREDATOR); EnemyFish jellyFish =
+	 * new EnemyFish(ocean, objType.JELLYFISH); enemies.clear();
+	 * enemies.add(predator); enemies.add(jellyFish); } else { for (EnemyFish e
+	 * : enemies) { e.update(); if (e.isDiscarded()) { e = null; } }
+	 * enemies.removeAll(Collections.singleton(null)); } }
+	 */
 
 	@Override
 	public void update() {
 
 		// check if playerFish dead event should start
-		if (playerFish.isDiscarded()){
-			//eventGameOver = true;
-			//blockUserInput = true;
+		if (playerFish.isDiscarded()) {
+			// eventGameOver = true;
+			// blockUserInput = true;
 		}
 
 		// Update ocean world
@@ -160,31 +140,28 @@ public class GamePlayState extends GameState {
 		// move playerFish
 		playerFish.update();
 
-		// move obstacles
-		for (int i = 0; i < obstacles.size(); i++) {
-			obstacles.get(i).update();
-
-			if (obstacles.get(i).isDiscarded()) {
-				int points = obstacles.get(i).getPoints();
-				this.addToScore(points);
-				obstacles.set(i, null);
+		// move opponents
+		for (OnScreenObject op : opponents) {
+			if (op.isActive()) {
+				op.update();
 			}
 		}
-
-		// move tokens
-		for (Token t : tokens) {
-			t.update();
-			if (t.isDiscarded()) {
-				t = null;
-			}
-			if (t.isVisible()) {
-				if (playerFish.intersects(t)) {
-					t.collectToken();
-					System.out.println("yey!");
-				}
-
-			}
-		}
+		/*
+		 * // move obstacles for (int i = 0; i < obstacles.size(); i++) {
+		 * obstacles.get(i).update();
+		 * 
+		 * if (obstacles.get(i).isDiscarded()) { int points =
+		 * obstacles.get(i).getPoints(); this.addToScore(points);
+		 * obstacles.set(i, null); } }
+		 * 
+		 * // move tokens for (Token t : tokens) { t.update(); if
+		 * (t.isDiscarded()) { t = null; } if (t.isVisible()) { if
+		 * (playerFish.intersects(t)) { t.collectToken();
+		 * System.out.println("yey!"); }
+		 * 
+		 * } }
+		 * 
+		 */
 		// check for collisions
 		determinColisions();
 
@@ -201,17 +178,15 @@ public class GamePlayState extends GameState {
 		// draw background
 		ocean.draw(g);
 
-		// draw obstacles
-		for (Obstacle o : obstacles) {
-			o.draw(g, true);
-		}
-		// draw tokens
-		for (Token t : tokens) {
-			t.draw(g,true);
-		}
-
 		// draw playerFish
-		playerFish.draw(g,true);
+		playerFish.draw(g, true);
+
+		// draw obstacles
+		for (OnScreenObject op : opponents) {
+			//System.out.println("(" + op.getX() + ", " + op.getY() + "), (" + op.getDx() + ", " + op.getDy() + ")");
+
+			op.draw(g, true);
+		}
 
 		// draw HUD
 		this.drawHUD(g);
@@ -219,7 +194,7 @@ public class GamePlayState extends GameState {
 	}
 
 	private void drawHUD(Graphics g) {
-		g.drawString("Time: "+playerFish.getTimeToString()+"Score: " + playerFish.getScore(), 750, 480);
+		g.drawString("Time: " + playerFish.getTimeToString() + "  Score: " + playerFish.getScore(), 650, 580);
 
 	}
 

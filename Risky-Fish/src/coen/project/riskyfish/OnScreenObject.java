@@ -115,19 +115,19 @@ public abstract class OnScreenObject {
 		dx = 0;
 		dy = 0;
 		this.immuneToOthers = false;
-		this.minX = ocean.getXmin();
-		this.minY = ocean.getYmin();
-		this.maxX = ocean.getXmax();
-		this.maxY = ocean.getXmax();
+		//this.minX = ocean.getXmin();
+		//this.minY = ocean.getYmin();
+		//this.maxX = ocean.getXmax();
+		//this.maxY = ocean.getXmax();
 		animation = new Animation();
 
 	}
 
-	protected boolean isActive() {
+	public boolean isActive() {
 		return isActive;
 	}
 
-	protected void setActive(boolean active) {
+	public void setActive(boolean active) {
 		this.isActive = active;
 	}
 
@@ -135,9 +135,9 @@ public abstract class OnScreenObject {
 	 * Sets the world bounding coordinates of the on-screen object.
 	 */
 	public void setMovingBounds() {
-		maxY = this.getParent().getYmax() - this.height;
+		maxY = this.getParent().getYmax();
 		minY = this.getParent().getYmin();
-		maxX = this.getParent().getXmax() - this.width;
+		maxX = this.getParent().getXmax();
 		minX = this.getParent().getXmin();
 	}
 
@@ -344,6 +344,13 @@ public abstract class OnScreenObject {
 		this.dx = newDX;
 		this.dy = newDY;
 	}
+	
+	public double getDx(){
+		return this.dx;
+	}
+	public double getDy(){
+		return this.dy;
+	}
 
 	public void worldBoundsCollision() {
 
@@ -406,15 +413,15 @@ public abstract class OnScreenObject {
 			double right = x + width;
 			double bottom = y + height;
 
-			switch (offScreenPolicy) {
+			switch (this.getOffScreenPolicy()) {
 			case EXIT_POLICY_BOUNCE:
-				if (bottom > ocean.getHeight()) {
+				if (bottom > this.maxY) {
 					dy = -Math.abs(dy);
-					y = y - (bottom - ocean.getHeight());
+					y = y - (bottom - this.maxY);
 				}
-				if (top < 0) {
+				if (top < this.minY) {
 					dy = Math.abs(dy);
-					y = y - top;
+					y = y - (top + this.minY);
 				}
 				if (right <= 0) {
 					discard();
@@ -436,7 +443,7 @@ public abstract class OnScreenObject {
 	}
 
 	public void draw(Graphics g, boolean showMBR) {
-		if (isActive()) {
+		if (isActive() & isVisible()) {
 			g.drawImage(animation.getImage(), (int) (x), (int) (y), null);
 		}
 		// For debugging collisions

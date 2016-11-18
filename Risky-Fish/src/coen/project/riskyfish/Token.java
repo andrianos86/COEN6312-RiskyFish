@@ -34,7 +34,7 @@ public class Token extends OnScreenObject {
 		// initialize token off screen.
 		super(oceanPanel);
 
-		this.setVelocityVector(0, oceanPanel.getSpeed());
+		this.setVelocityVector(oceanPanel.getSpeed(), 0);
 
 		this.tokenType = type;
 		this.reward = new RewardType(this.tokenType);
@@ -47,13 +47,6 @@ public class Token extends OnScreenObject {
 		this.setOffScreenPolicy(EXIT_POLICY_BOUNCE);
 
 		this.setImmuneToOthers(true);
-
-		// place token at random depth outside viewable part of the world
-		this.spawn(this.getParent().getYmin(), this.getParent().getYmax(), this.getParent().getXmin(),
-				this.getParent().getXmax());
-		// token ready to be drawn
-		this.setActive(true);
-
 	}
 
 	/**
@@ -89,8 +82,6 @@ public class Token extends OnScreenObject {
 			// if already collected don't give extra reward
 			return new RewardType(0, 0, false);
 		} else {
-			// stop drawing token
-			this.setActive(false);
 			this.collected = true;
 			// remove token from world
 			this.discard();
@@ -104,13 +95,15 @@ public class Token extends OnScreenObject {
 	}
 
 	public void update() {
-		this.setVelocityVector(this.getParent().getSpeed(), 0);
+		if(isActive()){
+		this.setVelocityVector(this.getParent().getSpeed(), 0.0);
 		super.update();
+		}
 	}
 
 	public void draw(Graphics g, boolean debug) {
-
-		if (this.isVisible() && this.isActive()) {
+		// Draw only if inside the screen, active and not yet collected
+		if (this.isVisible() && this.isActive() && !this.isCollected()) {
 			super.draw(g, debug);
 		}
 	}

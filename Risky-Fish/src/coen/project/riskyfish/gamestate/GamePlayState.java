@@ -89,7 +89,7 @@ public class GamePlayState extends GameState {
 
 		// Position opponents randomly past the right edge of the screen
 		for (OnScreenObject op : opponents) {
-			op.spawn(0.0, ocean.getHeight(), ocean.getWidth(), 10 * ocean.getWidth());
+			op.spawn(op.getMinY(), op.getMaxY(), op.getMaxX(), 10 * op.getMaxX());
 		}
 
 		// .Opponents are ready to be updated

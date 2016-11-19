@@ -26,16 +26,17 @@ public class EnemyFish extends OnScreenObject {
 
 	public EnemyFish(World oceanPanel, objType type) {
 		super(oceanPanel);
-		
+		this.setOffScreenPolicy(EXIT_POLICY_BOUNCE);
 		this.enemyType = type;
-		this.setVelocityVector(oceanPanel.getSpeed() + 5, 5*oceanPanel.getSpeed());
+		this.setVelocityVector(oceanPanel.getSpeed(),oceanPanel.getSpeed());
 		this.setSpriteImages(type);
 		
 		int animationDelay = 5;
 		this.setAnimation(spriteImages, animationDelay);
 		
 		this.setMovingBounds();
-		this.setOffScreenPolicy(EXIT_POLICY_BOUNCE);
+		this.maxY = this.getParent().getYmax()-55-100;
+		this.minY = this.getParent().getYmin()+100;
 
 		this.setImmuneToOthers(true);
 	}
@@ -53,9 +54,6 @@ public class EnemyFish extends OnScreenObject {
 			this.setWidth(55);
 			this.setCHeight(55);
 			this.setCWidth(55);
-			this.minY = this.getParent().getYmin() + 100;
-			this.maxY = this.getParent().getYmax() - 100;
-
 			break;
 		case JELLYFISH:
 			this.spriteImages = SpriteContent.token[1];
@@ -72,7 +70,7 @@ public class EnemyFish extends OnScreenObject {
 
 	public void setVelocityVector(double dx, double dy) {
 		if (this.enemyType == objType.PREDATOR) {
-			super.setVelocityVector(ocean.getSpeed()-1, 10*ocean.getSpeed());
+			super.setVelocityVector(ocean.getSpeed()-2.0, 2.0*ocean.getSpeed());
 		} else if (this.enemyType == objType.JELLYFISH) {
 			super.setVelocityVector(ocean.getSpeed(), 0.0);
 		}

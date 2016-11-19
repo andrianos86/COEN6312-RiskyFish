@@ -115,10 +115,10 @@ public abstract class OnScreenObject {
 		dx = 0;
 		dy = 0;
 		this.immuneToOthers = false;
-		//this.minX = ocean.getXmin();
-		//this.minY = ocean.getYmin();
-		//this.maxX = ocean.getXmax();
-		//this.maxY = ocean.getXmax();
+		// this.minX = ocean.getXmin();
+		// this.minY = ocean.getYmin();
+		// this.maxX = ocean.getXmax();
+		// this.maxY = ocean.getXmax();
 		animation = new Animation();
 
 	}
@@ -139,6 +139,22 @@ public abstract class OnScreenObject {
 		minY = this.getParent().getYmin();
 		maxX = this.getParent().getXmax();
 		minX = this.getParent().getXmin();
+	}
+
+	public int getMaxY() {
+		return this.maxY;
+	}
+
+	public int getMinY() {
+		return this.minY;
+	}
+
+	public int getMaxX() {
+		return this.maxX;
+	}
+
+	public int getMinX() {
+		return this.minX;
 	}
 
 	/**
@@ -344,11 +360,12 @@ public abstract class OnScreenObject {
 		this.dx = newDX;
 		this.dy = newDY;
 	}
-	
-	public double getDx(){
+
+	public double getDx() {
 		return this.dx;
 	}
-	public double getDy(){
+
+	public double getDy() {
 		return this.dy;
 	}
 
@@ -385,7 +402,7 @@ public abstract class OnScreenObject {
 	 */
 	private void onDiscard() {
 		// TODO Auto-generated method stub
-
+		this.setActive(false);
 	}
 
 	/**
@@ -407,23 +424,24 @@ public abstract class OnScreenObject {
 			// update objects position
 			x += dx;
 			y += dy;
-
+						
 			double left = x;
 			double top = y;
 			double right = x + width;
 			double bottom = y + height;
-
+			
+			
 			switch (this.getOffScreenPolicy()) {
 			case EXIT_POLICY_BOUNCE:
-				if (bottom > this.maxY) {
-					dy = -Math.abs(dy);
+				if (bottom >= this.maxY) {
+					dy = -dy;
 					y = y - (bottom - this.maxY);
 				}
 				if (top < this.minY) {
-					dy = Math.abs(dy);
-					y = y - (top + this.minY);
+					dy = -dy;
+					y = y - (top - this.minY);
 				}
-				if (right <= 0) {
+				if (right <= this.minX) {
 					discard();
 				}
 				break;

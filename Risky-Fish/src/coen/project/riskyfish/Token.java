@@ -49,6 +49,11 @@ public class Token extends OnScreenObject {
 		this.setImmuneToOthers(true);
 	}
 
+	public void spawn(double minimumY, double maximumY, double minimumX, double maximumX){
+		//tokens should be rare i.e each type appears once every 100x screen width
+		super.spawn(minimumY, maximumY, minimumX, 100*maximumX);
+		this.setPointsToAward(0);
+	}
 	/**
 	 * Loads the token sprite images to be used for the animation, and sets the
 	 * token's dimensions as per it's image.

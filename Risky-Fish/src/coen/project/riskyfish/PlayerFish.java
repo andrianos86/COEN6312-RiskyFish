@@ -212,9 +212,9 @@ public class PlayerFish extends OnScreenObject {
 	private void getNextPosition() {
 		float gravity = this.gravityFactor * GRAVITY;
 
-		if (y + (int) dy > maxY) {
+		if (y + (int) dy > maxY - height) {
 			dy = 0;
-			y = maxY;
+			y = maxY - height;
 		} else if (y < minY) {
 			y = minY;
 		} else {

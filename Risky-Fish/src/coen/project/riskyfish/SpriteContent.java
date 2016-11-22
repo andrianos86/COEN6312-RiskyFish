@@ -15,6 +15,8 @@ public class SpriteContent {
 	private static final String NETS_SPRITE_SHEET = "/textures/nets.png";
 	private static final String TOKEN_SHEET = "/textures/token_sprites.png";
 	private static final String PLAYER_SHEET = "/textures/fish_sprite1.png";
+	private static final String JELLYFISH_SHEET = "/textures/jellyFish.png";
+	private static final String PREDATOR_SHEET = "/textures/predator.png";
 
 
 
@@ -23,13 +25,10 @@ public class SpriteContent {
 
 	public static BufferedImage[][] nets = load(NETS_SPRITE_SHEET, 150, 215);
 	public static BufferedImage[][] seaweed = load(SEAWEED_SPRITE_SHEET, 150, 150);
-
-	//public static BufferedImage[][] predator = load("/Sprites/Enemies/Tengu.gif", 30, 30);
-//	public static BufferedImage[][] jellyfish = load("/Sprites/Enemies/GelPop.gif", 25, 25);
+	public static BufferedImage[][] jellyfish = load(JELLYFISH_SHEET,89,125);
+	public static BufferedImage[][] predator = load(PREDATOR_SHEET,200,79);
 
 	public static BufferedImage[][] token = load(TOKEN_SHEET, 55, 55);
-	//public static BufferedImage[][] femaleTkn = load(TOKEN_SHEET, 55, 55);
-	//public static BufferedImage[][] shellTkn = load(TOKEN_SHEET, 55, 55);
 
 	public static BufferedImage[][] load(String s, int w, int h) {
 		BufferedImage[][] ret;

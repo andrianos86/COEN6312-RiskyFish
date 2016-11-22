@@ -16,8 +16,6 @@ public class EnemyFish extends OnScreenObject {
 	// frames and properties of each player fish animation
 	private BufferedImage[] spriteImages;
 
-	// points earned for avoiding enemy
-	protected int pointsToAward;
 
 	// Damage it causes
 	protected int damageCaused;
@@ -35,10 +33,25 @@ public class EnemyFish extends OnScreenObject {
 		this.setAnimation(spriteImages, animationDelay);
 		
 		this.setMovingBounds();
-		this.maxY = this.getParent().getYmax()-55-100;
-		this.minY = this.getParent().getYmin()+100;
+		//this.maxY = this.getParent().getYmax()-55-100;
+		//this.minY = this.getParent().getYmin()+100;
 
 		this.setImmuneToOthers(true);
+	}
+	
+	public void spawn(double minimumY, double maximumY, double minimumX, double maximumX){
+		switch(enemyType){
+		case PREDATOR:
+			int offset = 150;
+			this.minY = this.getParent().getYmin()+150;
+			this.maxY = this.getParent().getYmax()-this.height-offset;
+			super.spawn(minY,maxY ,maximumX, 3*maximumX);
+			this.setPointsToAward(100);
+			break;
+		default:
+			super.spawn(minimumY, maximumY, minimumX, 10*maximumX);
+			this.setPointsToAward(50);
+		}
 	}
 
 	/**
@@ -49,18 +62,19 @@ public class EnemyFish extends OnScreenObject {
 
 		switch (tokenType) {
 		case PREDATOR:
-			this.spriteImages = SpriteContent.token[0];
-			this.setHeight(55);
-			this.setWidth(55);
-			this.setCHeight(55);
-			this.setCWidth(55);
+			this.spriteImages = SpriteContent.predator[0];
+			this.setHeight(79);
+			this.setWidth(200);
+			this.setCHeight(79);
+			this.setCWidth(200);
 			break;
 		case JELLYFISH:
-			this.spriteImages = SpriteContent.token[1];
-			this.setHeight(55);
-			this.setWidth(55);
-			this.setCHeight(45);
-			this.setCWidth(45);
+			this.spriteImages = SpriteContent.jellyfish[0];
+			this.setHeight(125);
+			this.setWidth(89);
+			this.setCHeight(125);
+			this.setCWidth(89);
+			
 			break;
 		default:
 			System.out.println("Wrong object type enum for enemyFish");
@@ -80,7 +94,8 @@ public class EnemyFish extends OnScreenObject {
 	public void update() {
 		System.out.println(ocean.getXmax() +","+ocean.getYmax() +","+ ocean.getXmin() +"," + ocean.getYmin() +",");
 		if(this.enemyType == objType.PREDATOR){
-			System.out.println("(" + this.getX() + ", " + this.getY() + "), (" + this.getDx() + ", " + this.getDy() + ")"+" active: "+this.isActive()+" disc: "+this.isDiscarded()+" ,min/max: "+this.minY+", "+this.maxY);
+			//System.out.println("(" + this.getX() + ", " + this.getY() + "), (" + this.getDx() + ", " + this.getDy() + ")"+" active: "+this.isActive()+" disc: "+this.isDiscarded()+" ,min/max: "+this.minY+", "+this.maxY);
+			System.out.println("minY,maxY : ("+this.minY+", "+this.maxY+")");
 
 		}
 		if (this.isActive()){
@@ -94,13 +109,6 @@ public class EnemyFish extends OnScreenObject {
 		}
 	}
 
-	public int getPointsToAward() {
-		return pointsToAward;
-	}
-
-	public void setPointsToAward(int pointsToAward) {
-		this.pointsToAward = pointsToAward;
-	}
 
 
 }

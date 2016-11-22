@@ -89,7 +89,7 @@ public class GamePlayState extends GameState {
 
 		// Position opponents randomly past the right edge of the screen
 		for (OnScreenObject op : opponents) {
-			op.spawn(op.getMinY(), op.getMaxY(), op.getMaxX(), 10 * op.getMaxX());
+			op.spawn(ocean.getYmin(), ocean.getYmax(), ocean.getXmin(),ocean.getXmax());
 		}
 
 		// .Opponents are ready to be updated
@@ -144,8 +144,15 @@ public class GamePlayState extends GameState {
 		for (OnScreenObject op : opponents) {
 			if (op.isActive()) {
 				op.update();
+				if(op.isDiscarded()){
+					playerFish.increaseScore(op.getPointsToAward());
+				}
 			}
 		}
+		
+		// remove discarded opponents and give points 
+		
+		// regenerate discarded opponents
 		/*
 		 * // move obstacles for (int i = 0; i < obstacles.size(); i++) {
 		 * obstacles.get(i).update();

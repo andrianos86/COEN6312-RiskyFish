@@ -56,6 +56,22 @@ public class Obstacle extends OnScreenObject {
 		//		this.getParent().getXmax(), 20 * this.getParent().getXmax());
 
 	}
+	
+	public void spawn(double mimimumY, double maximumY, double minimumX, double maximumX){
+		switch(obstacleType){
+		case SEAWEED:
+			super.spawn(ocean.getYmax()-height, ocean.getYmax()-height,minimumX, 3*maximumX);
+			this.setPointsToAward(10);
+
+			//seaweed appear at the bottom of the ocean
+			break;
+		case NETS:
+			super.spawn(ocean.getYmin(),ocean.getYmin(),minimumX, 6*maximumX);
+			this.setPointsToAward(20);
+
+			//nets appear on the surface of the ocean
+		}
+	}
 
 	/**
 	 * Loads the token sprite images to be used for the animation, and sets the

@@ -108,6 +108,11 @@ public abstract class OnScreenObject {
 	 * screen.
 	 */
 	private int offScreenPolicy = EXIT_POLICY_BOUNCE;
+	
+	/**
+	 * Determines the points to award for avoiding the on screen object.
+	 */
+	protected int pointsToAward=0;
 
 	// constructor
 	public OnScreenObject(World ocean) {
@@ -129,6 +134,14 @@ public abstract class OnScreenObject {
 
 	public void setActive(boolean active) {
 		this.isActive = active;
+	}
+	
+	public int getPointsToAward() {
+		return pointsToAward;
+	}
+
+	public void setPointsToAward(int pointsToAward) {
+		this.pointsToAward = pointsToAward;
 	}
 
 	/**
@@ -446,8 +459,17 @@ public abstract class OnScreenObject {
 				}
 				break;
 			case EXIT_POLICY_DIE:
-				if (left <= ocean.getXmin() || bottom >= ocean.getYmax() || top <= ocean.getYmin())
+				if (left <= ocean.getXmin() ){
 					discard();
+			}
+				if (bottom >= ocean.getYmax()){
+					y = y - (bottom - ocean.getYmax());
+					discard();
+				}
+				if (top < this.ocean.getYmin()){
+					y = y - (top - ocean.getYmin());
+					discard();
+				}
 				break;
 			default:
 				if (right < ocean.getXmin()) {

@@ -1,11 +1,8 @@
 package coen.project.riskyfish.gamestate;
 
-import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.Random;
 
 import coen.project.riskyfish.PlayerFish;

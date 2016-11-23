@@ -52,24 +52,25 @@ public class Obstacle extends OnScreenObject {
 		// Obstacles only move towards the playerFish
 		this.setOffScreenPolicy(EXIT_POLICY_BOUNCE);
 		this.setVelocityVector(oceanPanel.getSpeed(), 0);
-		//this.spawn(this.getParent().getYmin(), this.getParent().getYmax() - this.getHeight(),
-		//		this.getParent().getXmax(), 20 * this.getParent().getXmax());
+		// this.spawn(this.getParent().getYmin(), this.getParent().getYmax() -
+		// this.getHeight(),
+		// this.getParent().getXmax(), 20 * this.getParent().getXmax());
 
 	}
-	
-	public void spawn(double mimimumY, double maximumY, double minimumX, double maximumX){
-		switch(obstacleType){
-		case SEAWEED:
-			super.spawn(ocean.getYmax()-height, ocean.getYmax()-height,minimumX, 3*maximumX);
-			this.setPointsToAward(10);
 
-			//seaweed appear at the bottom of the ocean
+	public void spawn(double mimimumY, double maximumY, double minimumX, double maximumX) {
+		switch (obstacleType) {
+		case SEAWEED:
+			// seaweed appear at the bottom of the ocean every 2-3 screen widths
+			super.spawn(ocean.getYmax() - height, ocean.getYmax() - height, 1.0*maximumX, 2.0* maximumX);
+			this.setPointsToAward(10);
 			break;
 		case NETS:
-			super.spawn(ocean.getYmin(),ocean.getYmin(),minimumX, 6*maximumX);
+			// nets appear at the top of the ocean every 2-3 screen widths
+			super.spawn(ocean.getYmin(), ocean.getYmin(),  1.0* maximumX, 2.0 * maximumX);
 			this.setPointsToAward(20);
 
-			//nets appear on the surface of the ocean
+			// nets appear on the surface of the ocean
 		}
 	}
 

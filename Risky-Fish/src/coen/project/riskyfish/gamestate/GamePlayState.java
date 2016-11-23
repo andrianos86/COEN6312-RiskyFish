@@ -1,9 +1,13 @@
 package coen.project.riskyfish.gamestate;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.Random;
+
 import coen.project.riskyfish.PlayerFish;
 import coen.project.riskyfish.Token;
 import coen.project.riskyfish.EnemyFish;
@@ -18,6 +22,7 @@ public class GamePlayState extends GameState {
 	// Define instance variables for the game objects
 	private PlayerFish playerFish;
 	private ArrayList<OnScreenObject> opponents;
+	private ArrayList<OnScreenObject> tempOpponents;
 	// private ArrayList<Obstacle> obstacles;
 	// private ArrayList<EnemyFish> enemies;
 	// private ArrayList<Token> tokens;
@@ -50,16 +55,18 @@ public class GamePlayState extends GameState {
 		timeAlive = 0;
 		// levelHighScore = loadStatistics();
 
-		ocean = new World(GamePanel.WIDTH, GamePanel.HEIGHT);
+		ocean = new World(0,GamePanel.WIDTH, 50,GamePanel.HEIGHT);
 		ocean.setSpeed(-2.0);
 
 		// playerFish
 		playerFish = new PlayerFish(ocean);
 		playerFish.setPosition(60.0, 50.0);
 
-		// Opponents
+		// Holds all opponents spawned in the game
 		opponents = new ArrayList<>();
-		initializeOponents();
+		// Holds a temporary copy of opponents to add to the game
+		tempOpponents = new ArrayList<>();
+		initializeOpponents();
 
 		// hud
 		// hud = new HeadsUpDisplay(playerFish);
@@ -78,53 +85,109 @@ public class GamePlayState extends GameState {
 
 	}
 
-	private void initializeOponents() {
-		opponents.add(new Token(ocean, objType.FOOD_TKN));
-		opponents.add(new Token(ocean, objType.FEMALE_TKN));
-		opponents.add(new Token(ocean, objType.SHELL_TKN));
-		opponents.add(new Obstacle(ocean, objType.NETS));
-		opponents.add(new Obstacle(ocean, objType.SEAWEED));
-		opponents.add(new EnemyFish(ocean, objType.PREDATOR));
-		opponents.add(new EnemyFish(ocean, objType.JELLYFISH));
+	private void initializeOpponents() {
+		opponents.clear();
+		tempOpponents.clear();
+		
+		addObstacle();
+		addToken();
+		addEnemy();
+		
+		opponents.addAll(tempOpponents);
+		tempOpponents.clear();
 
-		// Position opponents randomly past the right edge of the screen
-		for (OnScreenObject op : opponents) {
-			op.spawn(ocean.getYmin(), ocean.getYmax(), ocean.getXmin(),ocean.getXmax());
+	}
+
+	private void regenerateOpponent(OnScreenObject obj) {
+		if (obj.isDiscarded()) {
+			if (obj instanceof Token) {
+				addToken();
+			} else if (obj instanceof EnemyFish) {
+				addEnemy();
+			} else if (obj instanceof Obstacle) {
+				addObstacle();
+			}
 		}
+	}
 
-		// .Opponents are ready to be updated
-		for (OnScreenObject op : opponents) {
-			op.setActive(true);
+	private void addObstacle() {
+		Random random = new Random();
+		OnScreenObject opponentToAdd;
+
+		int randomChoice = random.nextInt(2);
+		System.out.println(randomChoice);
+
+		if (randomChoice == 0) { // randomChoice=0 : nets
+
+			opponentToAdd = new Obstacle(ocean, objType.NETS);
+			placeWithNoOverlap(opponentToAdd);
+
+		} else if (randomChoice == 1) { // randomChoice =1 : seaweed
+			opponentToAdd = new Obstacle(ocean, objType.SEAWEED);
+			placeWithNoOverlap(opponentToAdd);
+
+		}else{ // randomChoice = 2: seaweed + nets in same screen
+			opponentToAdd = new Obstacle(ocean, objType.NETS);
+			placeWithNoOverlap(opponentToAdd);
+			opponentToAdd = new Obstacle(ocean, objType.SEAWEED);
+			placeWithNoOverlap(opponentToAdd);
 		}
 
 	}
-	/*
-	 * private void populateTokens() { if (tokens.isEmpty()) { Token foodTkn =
-	 * new Token(ocean, objType.FOOD_TKN); Token femaleTkn = new Token(ocean,
-	 * objType.FEMALE_TKN); Token shellTkn = new Token(ocean,
-	 * objType.SHELL_TKN); tokens.add(foodTkn); tokens.add(femaleTkn);
-	 * tokens.add(shellTkn); } else { for (Token t : tokens) { t.update(); if
-	 * (t.isCollected() || t.isDiscarded()) { t = null; } }
-	 * tokens.removeAll(Collections.singleton(null));
-	 * 
-	 * }
-	 * 
-	 * }
-	 * 
-	 * private void populateObstacles() { if (obstacles.isEmpty()) { Obstacle
-	 * seaWeed = new Obstacle(ocean, objType.SEAWEED); Obstacle nets = new
-	 * Obstacle(ocean, objType.NETS); obstacles.clear(); obstacles.add(seaWeed);
-	 * obstacles.add(nets); } else { for (Obstacle o : obstacles) { o.update();
-	 * if (o.isDiscarded()) { o = null; } }
-	 * obstacles.removeAll(Collections.singleton(null)); } }
-	 * 
-	 * private void populateEnemies() { if (enemies.isEmpty()) { EnemyFish
-	 * predator = new EnemyFish(ocean, objType.PREDATOR); EnemyFish jellyFish =
-	 * new EnemyFish(ocean, objType.JELLYFISH); enemies.clear();
-	 * enemies.add(predator); enemies.add(jellyFish); } else { for (EnemyFish e
-	 * : enemies) { e.update(); if (e.isDiscarded()) { e = null; } }
-	 * enemies.removeAll(Collections.singleton(null)); } }
-	 */
+
+	private void addToken() {
+		Random random = new Random();
+		OnScreenObject tokenToAdd;
+
+		int randomChoice = random.nextInt(3);
+
+		if (randomChoice == 0) { // randomChoice=0 : food token
+
+			tokenToAdd = new Token(ocean, objType.FOOD_TKN);
+
+		} else if (randomChoice == 1) { // randomChoice =1 : female token
+			tokenToAdd = new Token(ocean, objType.FEMALE_TKN);
+		} else { // randomChoice = 2 : shell token
+			tokenToAdd = new Token(ocean, objType.SHELL_TKN);
+		}
+
+		placeWithNoOverlap(tokenToAdd);
+	}
+
+	private void addEnemy() {
+		Random random = new Random();
+		OnScreenObject enemyToAdd;
+
+		int randomChoice = random.nextInt(2);
+
+		if (randomChoice == 0) { // randomChoice=0 : predator enemy
+			enemyToAdd = new EnemyFish(ocean, objType.PREDATOR);
+
+		} else { // randomChoice =1 : female token
+			enemyToAdd = new EnemyFish(ocean, objType.JELLYFISH);
+		}
+
+		placeWithNoOverlap(enemyToAdd);
+	}
+
+	private void placeWithNoOverlap(OnScreenObject opponent) {
+		boolean intersects = true;
+		while (intersects) {
+			intersects = false;
+			// Position opponents randomly past the right edge of the screen
+			opponent.spawn(ocean.getYmin(), ocean.getYmax(), ocean.getXmin(), ocean.getXmax());
+			System.out.println("min/max: "+ocean.getXmin() +", "+ocean.getXmax());
+			for (OnScreenObject onsb : opponents) {
+				if (opponent.intersects(onsb)) {
+					intersects = true;
+					//opponent.spawn(ocean.getYmin(), ocean.getYmax(), ocean.getXmin(), ocean.getXmax());
+				}
+			}
+		}
+		// Opponent does not intersect and ready to be updated/drawn
+		opponent.setActive(true);
+		tempOpponents.add(opponent);
+	}
 
 	@Override
 	public void update() {
@@ -139,36 +202,33 @@ public class GamePlayState extends GameState {
 		ocean.update();
 		// move playerFish
 		playerFish.update();
-
-		// move opponents
-		for (OnScreenObject op : opponents) {
-			if (op.isActive()) {
-				op.update();
-				if(op.isDiscarded()){
-					playerFish.increaseScore(op.getPointsToAward());
+		//clear tempOpponents;
+		tempOpponents.clear();
+		ArrayList<OnScreenObject> toRemove = new ArrayList<>();
+		// move opponents and give points for each one avoided
+		for(OnScreenObject currOpponent: opponents){
+			if(currOpponent.isActive()){
+				currOpponent.update();
+				if(currOpponent.isDiscarded()){
+					playerFish.increaseScore(currOpponent.getPointsToAward());
+					regenerateOpponent(currOpponent);
+					currOpponent.setActive(false);
+					toRemove.add(currOpponent);
 				}
 			}
 		}
-		
-		// remove discarded opponents and give points 
-		
-		// regenerate discarded opponents
-		/*
-		 * // move obstacles for (int i = 0; i < obstacles.size(); i++) {
-		 * obstacles.get(i).update();
-		 * 
-		 * if (obstacles.get(i).isDiscarded()) { int points =
-		 * obstacles.get(i).getPoints(); this.addToScore(points);
-		 * obstacles.set(i, null); } }
-		 * 
-		 * // move tokens for (Token t : tokens) { t.update(); if
-		 * (t.isDiscarded()) { t = null; } if (t.isVisible()) { if
-		 * (playerFish.intersects(t)) { t.collectToken();
-		 * System.out.println("yey!"); }
-		 * 
-		 * } }
-		 * 
-		 */
+		//clear discarded opponents and add new ones
+		opponents.removeAll(toRemove);
+		opponents.addAll(tempOpponents);
+		tempOpponents.clear();
+		System.out.println("total opponents: " + opponents.size());
+
+		// cleanup null opponents
+		//opponents.removeAll(Collections.singleton(null));
+
+		// give points for each discarded/avoided opponents
+		// remove discarded opponents and regenerate new ones
+
 		// check for collisions
 		determinColisions();
 
@@ -181,8 +241,8 @@ public class GamePlayState extends GameState {
 
 	@Override
 	public void draw(Graphics g) {
-
-		// draw background
+		
+		// draw ocean world
 		ocean.draw(g);
 
 		// draw playerFish
@@ -190,8 +250,6 @@ public class GamePlayState extends GameState {
 
 		// draw obstacles
 		for (OnScreenObject op : opponents) {
-			//System.out.println("(" + op.getX() + ", " + op.getY() + "), (" + op.getDx() + ", " + op.getDy() + ")");
-
 			op.draw(g, true);
 		}
 

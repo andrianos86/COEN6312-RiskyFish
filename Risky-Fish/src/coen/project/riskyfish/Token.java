@@ -50,8 +50,8 @@ public class Token extends OnScreenObject {
 	}
 
 	public void spawn(double minimumY, double maximumY, double minimumX, double maximumX){
-		//tokens should be rare i.e each type appears once every 100x screen width
-		super.spawn(minimumY, maximumY, minimumX, 100*maximumX);
+		//tokens should be rare i.e each type appears once every 5 screen widths
+		super.spawn(minimumY, maximumY, 9.0*maximumX, 10.0*maximumX);
 		this.setPointsToAward(0);
 	}
 	/**

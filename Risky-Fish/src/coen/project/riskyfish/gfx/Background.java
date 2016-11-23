@@ -6,7 +6,7 @@ import coen.project.riskyfish.GamePanel;
 
 public class Background {
 
-	public static final String BG_RES = "/textures/bg_underwater.png";
+	public static final String BG_RES = "/textures/bg_underwater.jpg";
 
 	private BufferedImage bgImage;
 
@@ -15,11 +15,15 @@ public class Background {
 	private double dx;
 	private double dy;
 	private double moveScale;
-	
 
 	public Background(String s, double ms) {
 		SpriteSheet bgSheet = new SpriteSheet(ImageLoader.loadImage(BG_RES));
 		bgImage = bgSheet.crop(0, 0, GamePanel.WIDTH, GamePanel.HEIGHT);
+		this.moveScale = ms;
+	}
+	public Background(String s, double ms,int width,int height) {
+		SpriteSheet bgSheet = new SpriteSheet(ImageLoader.loadImage(BG_RES));
+		bgImage = bgSheet.crop(0, 0, width, height);
 		this.moveScale = ms;
 	}
 
@@ -48,18 +52,15 @@ public class Background {
 
 	public void draw(Graphics g) {
 		g.drawImage(bgImage, (int) x, (int) y, null);
+
 		if (x < 0) {
 			g.drawImage(bgImage, (int) x + GamePanel.WIDTH, (int) y, null);
 		}
-		if (x > 0) {
-			g.drawImage(bgImage, (int) x - GamePanel.WIDTH, (int) y, null);
-			System.out.println("x2 " + x);
-		}
-		if (y < 0) {
-			g.drawImage(bgImage, (int) x, (int) y + GamePanel.HEIGHT, null);
-		}
-		if (y > 0) {
-			g.drawImage(bgImage, (int) x, (int) y - GamePanel.HEIGHT, null);
-		}
+		/*
+		 * if (x > 0) { g.drawImage(bgImage, (int) x - GamePanel.WIDTH, (int) y,
+		 * null); } if (y < 0) { g.drawImage(bgImage, (int) x, (int) y +
+		 * GamePanel.HEIGHT, null); } if (y > 0) { g.drawImage(bgImage, (int) x,
+		 * (int) y - GamePanel.HEIGHT, null); }
+		 */
 	}
 }

@@ -1,5 +1,6 @@
 package coen.project.riskyfish;
 
+import java.awt.Color;
 import java.awt.Graphics;
 
 import coen.project.riskyfish.gfx.Background;
@@ -28,48 +29,36 @@ public class World {
 	//
 	private String bgName = Background.BG_RES;
 
-	private static final int MIN_SEPERATION = 40; // minimum separation between
-													// obstacles
-
-	public World(int viewWidth, int viewHeight) {
+	public World(int xmin, int xmax, int ymin, int ymax) {
+		this.xmin = xmin;
+		this.xmax = xmax;
+		this.ymin = ymin;
+		this.ymax = ymax;
 		this.scrollSpeed = 0;
-
+		this.pWidth = xmax - xmin;
+		this.pHeight = ymax - ymin;
+		
 		this.loadBackground(bgName);
 
-		this.pWidth = viewWidth;
-		this.pHeight = viewHeight;
-		
-		this.worldHeight = pHeight;
-		this.worldWidth = 2 * pWidth;
 
-		xmin = 0;
-		ymin = 0;
-		ymax = ymin + this.pHeight;
-		xmax = xmin + this.pWidth;
 	}
-	
-	
-	
-	
-	public int getWorldWidth(){
+
+	public int getWorldWidth() {
 		return this.worldWidth;
 	}
-	
-	public int getWorldHeight(){
+
+	public int getWorldHeight() {
 		return this.worldHeight;
 	}
 
 	public void loadBackground(String bgName) {
 		try {
-			oceanBg = new Background(bgName, 1);
+			oceanBg = new Background(bgName, 1,this.pWidth,this.pHeight);
+			oceanBg.setPosition(xmin, ymin);
 			oceanBg.setVector(scrollSpeed, 0);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-
-	public int minSeperation() {
-		return this.MIN_SEPERATION;
 	}
 
 	public Background getBackground() {
@@ -143,6 +132,14 @@ public class World {
 	}
 
 	public void draw(Graphics g) {
+		//draw sky
+		g.setColor(Color.CYAN);
+		g.fillRect(0, 0, GamePanel.WIDTH, 45);
+		//draw sea boundary
+		g.setColor(Color.WHITE);
+		g.fillRect(0, 45, GamePanel.WIDTH, 5);
+		g.setColor(Color.BLACK);
+		//draw ocean water
 		oceanBg.draw(g);
 	}
 }

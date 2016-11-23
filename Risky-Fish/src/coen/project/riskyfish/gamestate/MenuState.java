@@ -5,6 +5,7 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.event.KeyEvent;
 
+import coen.project.riskyfish.GamePanel;
 import coen.project.riskyfish.gfx.Background;
 
 public class MenuState extends GameState {
@@ -23,8 +24,9 @@ public class MenuState extends GameState {
 	public MenuState(GameStateManager gsm) {
 		super(gsm);
 		try {
-			bg = new Background(Background.BG_RES, 1);
-			bg.setVector(-2.0, 0);
+			bg = new Background(Background.BG_RES, 1,GamePanel.WIDTH,GamePanel.HEIGHT-50);
+			bg.setVector(0, 0);
+			bg.setPosition(0, 50);
 
 			titleColor = Color.WHITE;
 			titleFont = new Font("Times New Roman", Font.BOLD, 28);
@@ -49,6 +51,13 @@ public class MenuState extends GameState {
 
 	@Override
 	public void draw(Graphics g) {
+		//draw sky
+		g.setColor(Color.CYAN);
+		g.fillRect(0, 0, GamePanel.WIDTH, 45);
+		//draw sea boundary
+		g.setColor(Color.WHITE);
+		g.fillRect(0, 45, GamePanel.WIDTH, 5);
+		g.setColor(Color.BLACK);
 		// draw background
 		bg.draw(g);
 
@@ -72,7 +81,7 @@ public class MenuState extends GameState {
 		// draw credits
 		g.setFont(smallerFont);
 		g.setColor(Color.BLACK);
-		g.drawString("COEN6312 - Fall 2016. Team: Now this.", 10, 570);
+		g.drawString("COEN6312 - Fall 2016. Team: Now this.", 10, 30);
 	}
 
 	private void select() {

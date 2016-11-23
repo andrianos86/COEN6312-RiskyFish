@@ -228,8 +228,12 @@ public abstract class OnScreenObject {
 	 *         object.
 	 */
 	public boolean intersects(OnScreenObject other) {
+		if(other == null){
+			return false;
+		}
 		Rectangle r1 = getRectangle();
 		Rectangle r2 = other.getRectangle();
+		
 		return r1.intersects(r2);
 	}
 
@@ -241,7 +245,7 @@ public abstract class OnScreenObject {
 	 * @return Returns true if on-screen object intersects the given rectangle.
 	 */
 	public boolean intersects(Rectangle r) {
-		return getRectangle().intersects(r);
+		return this.getRectangle().intersects(r);
 	}
 
 	public boolean contains(OnScreenObject o) {

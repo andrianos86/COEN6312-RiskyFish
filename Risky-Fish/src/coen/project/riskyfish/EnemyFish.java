@@ -41,7 +41,7 @@ public class EnemyFish extends OnScreenObject {
 		case PREDATOR:
 			dy = 2.0;
 			int offset = 150;
-			this.minY = this.getParent().getYmin() + 150;
+			this.minY = this.getParent().getYmin() + offset;
 			this.maxY = this.getParent().getYmax() - this.height - offset;
 			super.spawn(minY, maxY, 8.0 * maximumX, 9.0 * maximumX);
 			this.setPointsToAward(100);

@@ -22,7 +22,9 @@ public class GamePlayState extends GameState {
 	// Define instance variables for the game objects
 	private PlayerFish playerFish;
 	private ArrayList<OnScreenObject> opponents;
-	private ArrayList<OnScreenObject> tempOpponents;
+	private ArrayList<OnScreenObject> toAdd;
+	private ArrayList<OnScreenObject> toRemove;
+
 	// private ArrayList<Obstacle> obstacles;
 	// private ArrayList<EnemyFish> enemies;
 	// private ArrayList<Token> tokens;
@@ -55,7 +57,7 @@ public class GamePlayState extends GameState {
 		timeAlive = 0;
 		// levelHighScore = loadStatistics();
 
-		ocean = new World(0,GamePanel.WIDTH, 50,GamePanel.HEIGHT);
+		ocean = new World(0, GamePanel.WIDTH, 50, GamePanel.HEIGHT);
 		ocean.setSpeed(-2.0);
 
 		// playerFish
@@ -65,7 +67,10 @@ public class GamePlayState extends GameState {
 		// Holds all opponents spawned in the game
 		opponents = new ArrayList<>();
 		// Holds a temporary copy of opponents to add to the game
-		tempOpponents = new ArrayList<>();
+		toAdd = new ArrayList<>();
+		// Holds a temporary copy of discarded or collected objects to remove
+		// from the game
+		toRemove = new ArrayList<>();
 		initializeOpponents();
 
 		// hud
@@ -87,14 +92,14 @@ public class GamePlayState extends GameState {
 
 	private void initializeOpponents() {
 		opponents.clear();
-		tempOpponents.clear();
-		
+		toAdd.clear();
+
 		addObstacle();
 		addToken();
 		addEnemy();
-		
-		opponents.addAll(tempOpponents);
-		tempOpponents.clear();
+
+		opponents.addAll(toAdd);
+		toAdd.clear();
 
 	}
 
@@ -126,7 +131,7 @@ public class GamePlayState extends GameState {
 			opponentToAdd = new Obstacle(ocean, objType.SEAWEED);
 			placeWithNoOverlap(opponentToAdd);
 
-		}else{ // randomChoice = 2: seaweed + nets in same screen
+		} else { // randomChoice = 2: seaweed + nets in same screen
 			opponentToAdd = new Obstacle(ocean, objType.NETS);
 			placeWithNoOverlap(opponentToAdd);
 			opponentToAdd = new Obstacle(ocean, objType.SEAWEED);
@@ -176,17 +181,18 @@ public class GamePlayState extends GameState {
 			intersects = false;
 			// Position opponents randomly past the right edge of the screen
 			opponent.spawn(ocean.getYmin(), ocean.getYmax(), ocean.getXmin(), ocean.getXmax());
-			System.out.println("min/max: "+ocean.getXmin() +", "+ocean.getXmax());
+			System.out.println("min/max: " + ocean.getXmin() + ", " + ocean.getXmax());
 			for (OnScreenObject onsb : opponents) {
 				if (opponent.intersects(onsb)) {
 					intersects = true;
-					//opponent.spawn(ocean.getYmin(), ocean.getYmax(), ocean.getXmin(), ocean.getXmax());
+					// opponent.spawn(ocean.getYmin(), ocean.getYmax(),
+					// ocean.getXmin(), ocean.getXmax());
 				}
 			}
 		}
 		// Opponent does not intersect and ready to be updated/drawn
 		opponent.setActive(true);
-		tempOpponents.add(opponent);
+		toAdd.add(opponent);
 	}
 
 	@Override
@@ -202,46 +208,63 @@ public class GamePlayState extends GameState {
 		ocean.update();
 		// move playerFish
 		playerFish.update();
-		//clear tempOpponents;
-		tempOpponents.clear();
-		ArrayList<OnScreenObject> toRemove = new ArrayList<>();
+		// clear temp Array toAdd and toRemove;
+		// toAdd.clear();
+		// toRemove.clear();
 		// move opponents and give points for each one avoided
-		for(OnScreenObject currOpponent: opponents){
-			if(currOpponent.isActive()){
+		for (OnScreenObject currOpponent : opponents) {
+			if (currOpponent.isActive()) {
 				currOpponent.update();
-				if(currOpponent.isDiscarded()){
+				if (currOpponent.isDiscarded()) {
+					// give points for each discarded/avoided opponents
 					playerFish.increaseScore(currOpponent.getPointsToAward());
 					regenerateOpponent(currOpponent);
-					currOpponent.setActive(false);
 					toRemove.add(currOpponent);
 				}
 			}
 		}
-		//clear discarded opponents and add new ones
-		opponents.removeAll(toRemove);
-		opponents.addAll(tempOpponents);
-		tempOpponents.clear();
-		System.out.println("total opponents: " + opponents.size());
-
-		// cleanup null opponents
-		//opponents.removeAll(Collections.singleton(null));
-
-		// give points for each discarded/avoided opponents
-		// remove discarded opponents and regenerate new ones
 
 		// check for collisions
-		determinColisions();
-
+		processCollision();
+		// clear discarded opponents and add new ones
+		opponents.removeAll(toRemove);
+		opponents.addAll(toAdd);
+		toAdd.clear();
+		toRemove.clear();
 	}
 
-	private void determinColisions() {
-		// TODO Auto-generated method stub
+	private void processCollision() {
+		for (OnScreenObject obj : opponents) {
+			// only detect Collisions if object in players vicinity
+			if (obj.getX() <= playerFish.getX() + playerFish.getWidth()) {
+				// collision occurred
+				if (playerFish.intersects(obj)) {
+					if (obj instanceof Token) {
+						playerFish.collectReward(((Token) obj).collectToken());
+						regenerateOpponent(obj);
+						toRemove.add(obj);
+					}
+					if (obj instanceof Obstacle) {
+						System.out.println("obstacle");
+					}
+					if (obj instanceof EnemyFish) {
+						System.out.println("enemy");
+					}
+				}
+				// check if player collects token
+
+				// check if player hits obstacle
+
+				// check if player hits enemy
+			}
+
+		}
 
 	}
 
 	@Override
 	public void draw(Graphics g) {
-		
+
 		// draw ocean world
 		ocean.draw(g);
 

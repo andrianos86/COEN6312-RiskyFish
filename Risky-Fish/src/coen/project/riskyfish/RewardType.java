@@ -2,7 +2,7 @@ package coen.project.riskyfish;
 
 import java.util.Random;
 
-class RewardType {
+public class RewardType {
 	
 	private int pointsToAward;
 	private int lifesToAward;
@@ -72,6 +72,10 @@ class RewardType {
 
 	public void setSlowDownAward(boolean slowDownAward) {
 		this.slowDownAward = slowDownAward;
+	}
+	
+	public String toString(){
+		return "Points: "+this.pointsToAward+", Lives: "+this.lifesToAward+", SlowDown: "+this.slowDownAward;
 	}
 
 }

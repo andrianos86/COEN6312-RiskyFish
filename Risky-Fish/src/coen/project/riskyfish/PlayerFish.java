@@ -96,12 +96,12 @@ public class PlayerFish extends OnScreenObject {
 	public PlayerFish(World ocean) {
 		this(ocean, PlayerFish.TYPE_II);
 	}
-	
-	private void setSprites(int currentState){
+
+	private void setSprites(int currentState) {
 		switch (currentState) {
 		case IDLE:
 			this.sprites = SpriteContent.playerFish[IDLE];
-			break;	
+			break;
 		default:
 			System.out.println("Wrong object type enum for token");
 			break;
@@ -228,6 +228,12 @@ public class PlayerFish extends OnScreenObject {
 			}
 		}
 
+	}
+
+	public void collectReward(RewardType reward) {
+		this.setLives(this.getLives() + reward.getLifesToAward());
+		this.score += reward.getPointsToAward();
+		this.isSlowingDown = reward.slowDownAward();
 	}
 
 	public void startSwimming() {

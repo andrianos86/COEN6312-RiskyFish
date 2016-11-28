@@ -6,19 +6,19 @@ public class RewardType {
 	
 	private int pointsToAward;
 	private int lifesToAward;
-	private boolean slowDownAward;
+	private double decelerationFactor;
 	
 	protected RewardType(objType tokenType){
 		pointsToAward = 0;
 		lifesToAward = 0;
-		slowDownAward = false;
+		decelerationFactor = 0.0;
 		
 		switch (tokenType) {
 		case FOOD_TKN:
 			this.generateLifes();
 			break;
 		case FEMALE_TKN:
-			this.setSlowDownAward(true);
+			this.generateDecelerationFactor();
 			break;
 		case SHELL_TKN:
 			this.generatePoints();
@@ -26,21 +26,21 @@ public class RewardType {
 		default:
 			pointsToAward = 0;
 			lifesToAward = 0;
-			slowDownAward = false;
+			decelerationFactor = 0.0;
 			break;
 		}
 		
 	}
 	
-	protected RewardType(int points, int lifes, boolean resetSpeed){
+	protected RewardType(int points, int lifes, double decelerateFactor){
 		this.setLifesToAward(lifes);
 		this.setPointsToAward(points);
-		this.setSlowDownAward(resetSpeed);
+		this.setDecelarationFactor(decelerateFactor);
 	}
 
 	private void generatePoints() {
 		Random gen = new Random();
-		int extraPoints = gen.nextInt(50)+1;
+		int extraPoints = gen.nextInt(1000)+500;
 		this.setPointsToAward(extraPoints);		
 	}
 
@@ -66,16 +66,22 @@ public class RewardType {
 		this.lifesToAward = lifesToAward;
 	}
 
-	public boolean slowDownAward() {
-		return slowDownAward;
+	public double getDecelarationFactor() {
+		return this.decelerationFactor;
 	}
 
-	public void setSlowDownAward(boolean slowDownAward) {
-		this.slowDownAward = slowDownAward;
+	public void setDecelarationFactor(double factor) {
+		this.decelerationFactor = factor;
+	}
+	
+	private void generateDecelerationFactor(){
+		Random gen = new Random();
+		double factor = gen.nextDouble();
+		this.setDecelarationFactor(factor);
 	}
 	
 	public String toString(){
-		return "Points: "+this.pointsToAward+", Lives: "+this.lifesToAward+", SlowDown: "+this.slowDownAward;
+		return "Points: "+this.pointsToAward+", Lives: "+this.lifesToAward+", SlowDown: "+this.decelerationFactor;
 	}
 
 }

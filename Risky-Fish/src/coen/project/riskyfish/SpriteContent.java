@@ -15,13 +15,15 @@ public class SpriteContent {
 	private static final String NETS_SPRITE_SHEET = "/textures/nets.png";
 	private static final String TOKEN_SHEET = "/textures/token_sprites.png";
 	private static final String PLAYER_SHEET = "/textures/fish_sprite1.png";
+	private static final String PLAYERFISH_2_SHEET = "/textures/fish2_sprites.gif";
 	private static final String JELLYFISH_SHEET = "/textures/jellyFish.png";
 	private static final String PREDATOR_SHEET = "/textures/predator.png";
 
 
 
 
-	public static BufferedImage[][] playerFish = load(PLAYER_SHEET, 57, 57);
+	public static BufferedImage[][] playerFish2 = load(PLAYERFISH_2_SHEET, 57, 57);
+	//public static BufferedImage[][] playerFish2_poisoned = load(PLAYERFISH_2_POISONED,57,57);
 
 	public static BufferedImage[][] nets = load(NETS_SPRITE_SHEET, 150, 215);
 	public static BufferedImage[][] seaweed = load(SEAWEED_SPRITE_SHEET, 150, 150);

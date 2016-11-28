@@ -1,267 +1,386 @@
 package coen.project.riskyfish;
 
 import java.awt.Graphics;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-
-import coen.project.riskyfish.gfx.ImageLoader;
-import coen.project.riskyfish.gfx.SpriteSheet;
 
 public class PlayerFish extends OnScreenObject {
 
-	// Limit the bounds of the fish vertical speed
-	private final int MIN_DY = 0;
-	private final int MAX_DY = 10;
+  /**
+   * Defines the absolute minimum vertical velocity a fish can travel with.
+   */
+  private final double MIN_DY = -8.0;
+  /**
+   * Defines the absolute maximum vertical velocity a fish can travel with.
+   */
+  private double MAX_DY = 10;
+  /**
+   * Defines the absolute minimum horizontal velocity a fish can travel with.
+   */
+  private final double MIN_DX;
+  /**
+   * Defines the absolute maximum horizontal velocity a fish can travel with.
+   */
+  private final double MAX_DX;
 
-	// fish types associated with different gravity factors
-	public static final int TYPE_I = 0;
-	public static final int TYPE_II = 1;
-	public static final int TYPE_III = 2;
+  /**
+   * Default grace period (minimum time between successive collisions) is 2 seconds;
+   */
+  private static final int GRACEPERIOD = 120;
+  /**
+   * Default time fish remains poisoned once colliding with a poisonous seaweed is 10 seconds.
+   */
+  private static final int POISONDURATION = 600;
 
-	// Gravity constant
-	protected final int GRAVITY = 12;
-	// Gravity factor depending on fish type
-	private float gravityFactor;
+  // Gravity factor depending on fish type
+  private float upThrust;
 
-	// fish properties
-	private int lives;
-	private int score;
-	private int distanceTravelled = 0;
+  // fish properties
+  private int lives;
+  private int score;
+  private int distanceTravelled;
 
-	// setting default fish type
-	private int type = TYPE_II;
+  // Player events
+  // player is swimmingUp
+  private boolean isSwimmingUp;
+  // collecting food-token
+  private boolean isEating;
+  // collecting female-fish-token
+  private boolean isSlowingDown;
+  // Lost final life
+  private boolean isDead;
+  // player is poisoned from seaweed
+  private boolean isPoisoned;
+  // player lost a life.
+  private boolean isHurt;
+  /**
+   * Determines the grace period between successive collisions (where life is lost).
+   * 
+   */
+  private long hurtTimer;
 
-	// flicking effect for animation when loosing a life.
-	private boolean isFlinching = false;
-	private long flinchTimer;
+  /**
+   * Determines how long the playerFish remains poisoned for. By default 10seconds.
+   */
+  private long poisonedTimer = 600;
+  /**
+   * Keeps track of how many seconds elapsed since the beginning of the game.
+   */
+  private long time;
 
-	// poisonedTimer used when poisoned
-	private int poisonedTime = (int) 10;
-	private long time;
+  // how far up fish moves with each user input
+  private double swimForce;
 
-	// how far up fish moves with each user input
-	private double swimForce = -8.0;
 
-	// Player events
-	// player is swimmingUp
-	private boolean isSwimmingUp;
-	// collecting food-token
-	private boolean isEating;
-	// collecting female-fish-token
-	private boolean isSlowingDown;
-	// Lost final life
-	private boolean isDead;
-	// Lost one life
-	private boolean isBitten;
-	// player is poisoned from seaweed
-	private boolean isPoisoned;
+  // Animation frames each player fish action
+  // private BufferedImage[] sprites;
 
-	// Animation frames each player fish action
-	private BufferedImage[] sprites;
+  // animated actions
+  private static final int IDLE = 0;
+  private static final int POISONED = 1;
+  private static final int DEAD = 2;
 
-	// animated actions
-	private static final int IDLE = 0;
-	private static final int EATING = 1;
-	private static final int DEAD = 2;
-	private static final int POISONED = 3;
+  public PlayerFish(World ocean, objType type) {
+    super(ocean, type);
+    this.MIN_DX = ocean.getSpeed();
+    this.MAX_DX = this.MIN_DX * 10.0;
 
-	public PlayerFish(World ocean, int fish_type) {
-		super(ocean);
-		isSwimmingUp = false;
-		isEating = false;
-		isSlowingDown = false;
-		isDead = false;
-		isBitten = false;
-		isPoisoned = false;
-		this.setActive(true);
+    isSwimmingUp = false;
+    isEating = false;
+    isSlowingDown = false;
+    isDead = false;
+    isHurt = false;
+    isPoisoned = false;
 
-		this.type = fish_type;
-		// Collision box dimensions
-		// Collision box dimensions
-		this.setCWidth(57);
-		this.setCHeight(57);
-		this.setWidth(57);
-		this.setHeight(57);
+    setPhysics(type);
 
-		this.setLives(3);
-		setImmuneToOthers(false);
-		setGravityFactor(type);
+    // Collision box dimensions
+    this.setCWidth(57);
+    this.setCHeight(57);
+    this.setWidth(57);
+    this.setHeight(57);
 
-		sprites = SpriteContent.playerFish[IDLE];
+    this.setLives(1);
 
-		setAnimation(sprites, 5);
-		setMovingBounds();
-	}
+    setAnimation(SpriteContent.playerFish2[IDLE], 10);
+    setMovingBounds();
+    this.setOffScreenPolicy(this.EXIT_POLICY_DIE);
+    this.setActive(true);
 
-	public PlayerFish(World ocean) {
-		this(ocean, PlayerFish.TYPE_II);
-	}
+  }
 
-	private void setSprites(int currentState) {
-		switch (currentState) {
-		case IDLE:
-			this.sprites = SpriteContent.playerFish[IDLE];
-			break;
-		default:
-			System.out.println("Wrong object type enum for token");
-			break;
-		}
-		this.setHeight(55);
-		this.setWidth(55);
-		this.setCHeight(55);
-		this.setCWidth(55);
+  /**
+   * Overloaded constructor using default player fish type if one is not specified.
+   * 
+   * @param ocean
+   */
+  public PlayerFish(World ocean) {
+    this(ocean, objType.PLAYERFISH_2);
+  }
 
-	}
 
-	private void setGravityFactor(int fish_type) {
-		switch (fish_type) {
-		case TYPE_I:
-			this.gravityFactor = 0.01f;
-			break;
-		case TYPE_III:
-			this.gravityFactor = 0.055f;
-			break;
-		default:
-			this.gravityFactor = 0.03f;
-		}
-	}
+  private void setPhysics(objType type) {
+    switch (type) {
+      case PLAYERFISH_1:
+        this.upThrust = -0.03f;
+        this.MAX_DY = 7.0f;
+        swimForce = -10.0f;
+        break;
+      case PLAYERFISH_3:
+        this.upThrust = 0.3f;
+        this.MAX_DY = 7.0f;
+        swimForce = -10.0f;
+        break;
+      default:
+        this.upThrust = 0.0f;
+        this.MAX_DY = 7.0f;
+        swimForce = -10.0f;
 
-	public void setLives(int i) {
-		lives = i;
-		if (lives < 0) {
-			lives = 0;
-			this.isDead = true;
-		}
-	}
+    }
+  }
 
-	public void gainLife() {
-		lives++;
-	}
+  public void setLives(int i) {
+    lives = i;
+    if (lives <= 0) {
+      lives = 0;
+      this.discard();
+    }
+  }
 
-	public void loseLife() {
-		lives--;
-		if (lives < 0) {
-			lives = 0;
-			this.isDead = true;
-		}
-	}
+  public void gainLife() {
+    lives++;
+  }
 
-	public int getLives() {
-		return lives;
-	}
+  public void loseLife() {
+    lives--;
+    if (lives <= 0) {
+      lives = 0;
+      this.discard();
+    }
+  }
 
-	public void increaseScore(int score) {
-		this.score += score;
-	}
+  public int getLives() {
+    return lives;
+  }
 
-	public int getScore() {
-		return score;
-	}
+  public void increaseScore(int score) {
+    this.score += score;
+  }
 
-	public long getTime() {
-		return time;
-	}
+  public int getScore() {
+    return score;
+  }
 
-	public void setTime(long t) {
-		time = t;
-	}
+  public long getTime() {
+    return time;
+  }
 
-	private void updateDistanceTravelled() {
-		distanceTravelled += (-this.getParent().getSpeed());
-	}
+  public void setTime(long t) {
+    time = t;
+  }
 
-	public void update() {
-		time++;
-		updateDistanceTravelled();
-		// updateScore();
+  private void updateDistanceTravelled() {
+    distanceTravelled += (-this.getParent().getSpeed());
+  }
 
-		// update speedX
-		if (time % 100 == 0) {
-			this.getParent().setSpeed(this.getParent().getSpeed() - 0.1);
-		}
+  public void update() {
+    if (!isDiscarded()) {
+      time++;
+      updateDistanceTravelled();
+      // updateScore();
 
-		// update position
-		getNextPosition();
-		this.worldBoundsCollision();
-		setPosition(x, y);
+      // Increase speed every five seconds
+      if (time % 300 == 0) {
+        this.getParent().setSpeed(this.getParent().getSpeed() - 0.5);
+      }
 
-		// check if player should flicker
-		if (isFlinching) {
-			flinchTimer++;
-			if (flinchTimer > 120) {
-				isFlinching = false;
-			}
-		}
+      // isHurt state: check if player should flicker and collide with opponents
+      if (isHurt) {
+        hurtTimer++;
+        if (hurtTimer > GRACEPERIOD) {
+          isHurt = false;
+          hurtTimer = 0;
+          this.setCollidable(true);
+        }
+      }
 
-		// set Animation by priority
-		if (isEating) {
-			if (currentAnimation != EATING) {
-				setAnimation(sprites, 1);
-			}
-		} else if (isDead) {
-			if (currentAnimation != DEAD) {
-				setAnimation(sprites, 1);
-			}
-		} else if (currentAnimation != IDLE) {
-			setAnimation(sprites, 1);
-		}
-		animation.update();
+      // check if player is poisoned
+      if (isPoisoned) {
+        // update poisonedTimer
+        poisonedTimer--;
+        swimForce = swimForce / 2 - 1;
+        if (poisonedTimer <= 0) {
+          isPoisoned = false;
+          poisonedTimer = POISONDURATION; // reset timer to 10 seconds;
 
-	}
+          currentAnimation = IDLE;
+          setAnimation(SpriteContent.playerFish2[IDLE], 10);
+          this.setPhysics(this.getType());
+        }
+      }
 
-	private void getNextPosition() {
-		float gravity = this.gravityFactor * GRAVITY;
 
-		if (y + (int) dy > maxY - height) {
-			dy = 0;
-			y = maxY - height;
-		} else if (y < minY) {
-			y = minY;
-		} else {
-			dy += gravity;
-			if (dy > MAX_DY) {
-				dy = MAX_DY;
-			}
-			y += dy;
-			if (dy > this.MIN_DY) {
-				isSwimmingUp = false;
-			}
-		}
+      updatePosition();
+    }
 
-	}
+    if (isDiscarded() && !isDead()) {
+      // If player is discarded play gameOver animation and lift player to the surface
+      // Player isDead once has been discarded and reaches the surface
+      this.setY(this.getY() - 5);
+      if (this.getY() < this.getParent().getYmin()) {
+        this.setY(this.getParent().getYmin());
+        this.isDead = true;
+      }
+    }
+  
+  }
 
-	public void collectReward(RewardType reward) {
-		this.setLives(this.getLives() + reward.getLifesToAward());
-		this.score += reward.getPointsToAward();
-		this.isSlowingDown = reward.slowDownAward();
-	}
+  private void updatePosition() {
+    // gravity increases downward speed velocity
+    float netGravity = this.upThrust + this.getParent().GRAVITY;
 
-	public void startSwimming() {
-		isSwimmingUp = true;
-		dy = swimForce;
-	}
+    dx = 0.0;
+    dy += netGravity;
 
-	public String getTimeToString() {
-		int minutes = (int) (time / 3600);
-		int seconds = (int) ((time % 3600) / 60);
-		return seconds < 10 ? minutes + ":0" + seconds : minutes + ":" + seconds;
-	}
+    // Limit maximum sinking velocity to MAX_DY- terminal downwards velocity
+    if (dy > MAX_DY) {
+      dy = MAX_DY;
+    }
 
-	public void reset() {
-		isFlinching = false;
-		currentAnimation = -1;
-	}
+    // Handle user's input by setting an initial upwards velocity
+    if (isSwimmingUp) {
+      dy = swimForce;
+      isSwimmingUp = false;
+    }
 
-	public void draw(Graphics g, boolean mbr) {
-		// draw player
-		if (isFlinching) {
-			long elapsed = (System.nanoTime() - flinchTimer) / 1000000;
+    super.update();
+  }
 
-			if (elapsed / 100 % 2 == 0) {
-				return; // blink every 100ms
-			}
-		}
-		super.draw(g, mbr);
-	}
+  public boolean isDead() {
+    return this.isDead;
+  }
+
+  protected void discard() {
+    // Player should not die for touching the boundaries if in grace period
+    if (!this.isHurt) {
+      discarded = true;
+      this.onDiscard();
+    }
+  }
+
+  protected void onDiscard() {
+    //stop scrolling the world
+    this.getParent().setSpeed(0.0);
+    currentAnimation = DEAD;
+    setAnimation(SpriteContent.playerFish2[DEAD], 10);
+    // Player is "Dead" only after his discarded playerFish has reached
+    // the surface.
+  }
+
+  public void collectReward(RewardType reward) {
+    this.setLives(this.getLives() + reward.getLifesToAward());
+    this.score += reward.getPointsToAward();
+    double newSpeed = this.getParent().getSpeed() * (1 - reward.getDecelarationFactor());
+    if (newSpeed > this.MIN_DX) {
+      newSpeed = MIN_DX;
+    }
+    this.getParent().setSpeed(newSpeed);
+  }
+
+  public void startSwimming() {
+    isSwimmingUp = true;
+  }
+
+  public String timerToString(long timer) {
+    int seconds = (int) ((timer % 3600) / 60);
+
+    return seconds < 10 ? "0" + seconds + " sec" : "" + seconds + " sec";
+  }
+
+  public String getTimeToString() {
+    int minutes = (int) (time / 3600);
+    int seconds = (int) ((time % 3600) / 60);
+    return seconds < 10 ? minutes + ":0" + seconds : minutes + ":" + seconds;
+  }
+
+  public void reset() {
+    isHurt = false;
+    currentAnimation = -1;
+  }
+
+
+
+  public void draw(Graphics g, boolean mbr) {
+    // player Fish is always on visible part of screen
+    if (this.isActive()) {
+      // If player fish is hurt it should flicker
+      if (isHurt) {
+        long elapsed = (System.nanoTime() - hurtTimer) / 1000000;
+
+        if (elapsed / 100 % 2 == 0) {
+          return; // blink every 100ms
+        }
+      }
+
+      // If player fish is poisoned, display on the screen how long he will remain poisoned for.
+      if (isPoisoned) {
+        g.drawString(this.timerToString(this.poisonedTimer), (int) this.getX(), (int) this.getY());
+      }
+      
+      g.drawImage(animation.getImage(), (int) (x), (int) (y), null);
+      if (mbr) {
+        Rectangle r = getRectangle();
+        g.drawRect(r.x, r.y, r.width, r.height);
+      }
+      
+    }
+  }
+
+  public void playerCollision(OnScreenObject opponent) {
+    // Only check collision of player with opponents that are active, on the
+    // screen, and in the vicinity of the player
+    if (opponent.isActive() && opponent.isVisible()
+        && opponent.getX() <= this.getX() + this.getWidth() && this.isActive()) {
+      boolean isColliding =
+          this.intersects(opponent) && opponent.isCollidable() && this.isCollidable();
+      if (isColliding) {
+        // opponent responds to collision by not rewarding points once discarded
+        opponent.setPointsToAward(0);
+        // Colliding with a Token
+        if (opponent instanceof Token) {
+          this.collectReward(((Token) opponent).getReward());
+          ((Token) opponent).setCollected(true);
+          opponent.discard();
+        }
+        // Colliding with an EnemyFish
+        else if (opponent instanceof EnemyFish) {
+          opponent.setCollidable(false);
+          this.loseLife();
+          this.isHurt = true;
+          this.setCollidable(false);
+        }
+        // Collide with an Obstacle
+        else if (opponent instanceof Obstacle) {
+          if (opponent.getType() == objType.NETS) {
+            this.discard();
+            // this.isDead = true;
+            this.setCollidable(false);
+            // Player dies immediately
+
+          }
+          // Collide with a poisonous seaweed
+          else if (opponent.getType() == objType.SEAWEED) {
+            this.isPoisoned = true;
+            currentAnimation = POISONED;
+            setAnimation(SpriteContent.playerFish2[POISONED], 10);
+            opponent.setCollidable(false);
+
+
+          }
+        }
+      }
+    }
+  }
+
 
 }

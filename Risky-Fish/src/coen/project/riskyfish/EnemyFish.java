@@ -7,95 +7,91 @@ import java.util.Random;
 
 public class EnemyFish extends OnScreenObject {
 
-	// identifier
-	private objType enemyType;
+  // sprite path
+  protected String spritePath;
 
-	// sprite path
-	protected String spritePath;
+  // frames and properties of each player fish animation
+  private BufferedImage[] spriteImages;
 
-	// frames and properties of each player fish animation
-	private BufferedImage[] spriteImages;
+  // Damage it causes
+  protected int damageCaused;
 
-	// Damage it causes
-	protected int damageCaused;
+  protected double speed;
 
-	protected double speed;
+  public EnemyFish(World oceanPanel, objType type) {
+    super(oceanPanel, type);
+    this.setOffScreenPolicy(EXIT_POLICY_BOUNCE);
+    // this.setVelocityVector(oceanPanel.getSpeed(), oceanPanel.getSpeed());
+    this.setSpriteImages(type);
 
-	public EnemyFish(World oceanPanel, objType type) {
-		super(oceanPanel);
-		this.setOffScreenPolicy(EXIT_POLICY_BOUNCE);
-		this.enemyType = type;
-		// this.setVelocityVector(oceanPanel.getSpeed(), oceanPanel.getSpeed());
-		this.setSpriteImages(type);
+    int animationDelay = 5;
+    this.setAnimation(spriteImages, animationDelay);
 
-		int animationDelay = 5;
-		this.setAnimation(spriteImages, animationDelay);
+    this.setMovingBounds();
+  }
 
-		this.setMovingBounds();
+  public void spawn(double minimumY, double maximumY, double minimumX, double maximumX) {
+    switch (type) {
+      case PREDATOR:
+        dy = 2.0;
+        int offset = 150;
+        this.minY = this.getParent().getYmin() + offset;
+        this.maxY = this.getParent().getYmax() - this.height - offset;
+        super.spawn(minY, maxY, 8.0 * maximumX, 9.0 * maximumX);
+        this.setPointsToAward(100);
+        break;
+      default:
+        super.spawn(minimumY, maximumY, 8.0 * maximumX, 9.0 * maximumX);
+        this.setPointsToAward(50);
+    }
+  }
 
-		this.setImmuneToOthers(true);
-	}
+  /**
+   * Loads the token sprite images to be used for the animation, and sets the token's dimensions as
+   * per it's image.
+   */
+  private void setSpriteImages(objType type) {
 
-	public void spawn(double minimumY, double maximumY, double minimumX, double maximumX) {
-		switch (enemyType) {
-		case PREDATOR:
-			dy = 2.0;
-			int offset = 150;
-			this.minY = this.getParent().getYmin() + offset;
-			this.maxY = this.getParent().getYmax() - this.height - offset;
-			super.spawn(minY, maxY, 8.0 * maximumX, 9.0 * maximumX);
-			this.setPointsToAward(100);
-			break;
-		default:
-			super.spawn(minimumY, maximumY, 8.0 * maximumX, 9.0 * maximumX);
-			this.setPointsToAward(50);
-		}
-	}
+    switch (type) {
+      case PREDATOR:
+        this.spriteImages = SpriteContent.predator[0];
+        this.setHeight(79);
+        this.setWidth(200);
+        this.setCHeight(79);
+        this.setCWidth(200);
+        break;
+      case JELLYFISH:
+        this.spriteImages = SpriteContent.jellyfish[0];
+        this.setHeight(125);
+        this.setWidth(89);
+        this.setCHeight(125);
+        this.setCWidth(89);
 
-	/**
-	 * Loads the token sprite images to be used for the animation, and sets the
-	 * token's dimensions as per it's image.
-	 */
-	private void setSpriteImages(objType type) {
+        break;
+      default:
+        System.out.println("Wrong object type enum for enemyFish");
+        break;
+    }
+  }
 
-		switch (type) {
-		case PREDATOR:
-			this.spriteImages = SpriteContent.predator[0];
-			this.setHeight(79);
-			this.setWidth(200);
-			this.setCHeight(79);
-			this.setCWidth(200);
-			break;
-		case JELLYFISH:
-			this.spriteImages = SpriteContent.jellyfish[0];
-			this.setHeight(125);
-			this.setWidth(89);
-			this.setCHeight(125);
-			this.setCWidth(89);
+  public void update() {
 
-			break;
-		default:
-			System.out.println("Wrong object type enum for enemyFish");
-			break;
-		}
-	}
+    if (this.isActive()) {
+      if (this.getType() == objType.PREDATOR) {
+        this.setVelocityVector(this.getParent().getSpeed() - 1.0, this.dy);
+      } else if (this.getType() == objType.JELLYFISH) {
+        this.setVelocityVector(this.getParent().getSpeed(), 0.0);
+      }
+      super.update();
+    }
+  }
 
-	public void update() {
+  public void draw(Graphics g, boolean mbr) {
+    if (this.isVisible() && this.isActive()) {
+      super.draw(g, mbr);
+    }
+  }
 
-		if (this.isActive()) {
-			if (enemyType == objType.PREDATOR) {
-				this.setVelocityVector(this.getParent().getSpeed() - 1.0, this.dy);
-			} else if (enemyType == objType.JELLYFISH) {
-				this.setVelocityVector(this.getParent().getSpeed(), 0.0);
-			}
-			super.update();
-		}
-	}
 
-	public void draw(Graphics g, boolean mbr) {
-		if (this.isVisible() && this.isActive()) {
-			super.draw(g, mbr);
-		}
-	}
 
 }

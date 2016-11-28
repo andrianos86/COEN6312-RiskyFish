@@ -12,17 +12,19 @@ public class GameStateManager {
 
 	private PauseState pauseState;
 	private boolean isPaused;
+	private boolean gameOver;
 
 	public static final int NUMGAMESTATES = 3;
 	public static final int MENUSTATE = 0;
 	public static final int GAMEPLAYSTATE = 1;
-	public static final int OTHERSTATE = 2;
+	public static final int GAMEOVERSTATE = 2;
 
 	public GameStateManager() {
 
 		gameStates = new ArrayList<GameState>();
 		pauseState = new PauseState(this);
 		isPaused = false;
+		gameOver = false;
 
 		currentState = MENUSTATE;
 		loadState(currentState);
@@ -37,8 +39,8 @@ public class GameStateManager {
 		case GAMEPLAYSTATE:
 			gameStates.add(GAMEPLAYSTATE, new GamePlayState(this));
 			break;
-		case OTHERSTATE:
-			System.out.println("No other state implemented yet");
+		case GAMEOVERSTATE:
+			gameStates.add(GAMEOVERSTATE, new GameOverState(this));
 		}
 	}
 
@@ -60,8 +62,16 @@ public class GameStateManager {
 		return isPaused;
 	}
 
+	public void gameOver(){
+	  gameOver = true;
+	}
+	
+	public boolean isGameOver(){
+	  return gameOver;
+	}
+	
 	public void update() {
-		if (isPaused) {
+		if (isPaused && !isGameOver()) {
 			pauseState.update();
 			return;
 		}
@@ -71,7 +81,7 @@ public class GameStateManager {
 	}
 
 	public void draw(Graphics g) {
-		if (isPaused) {
+		if (isPaused && !isGameOver()) {
 			pauseState.draw(g);
 			return;
 		}
@@ -84,7 +94,7 @@ public class GameStateManager {
 	}
 
 	public void keyPressed(int k) {
-		if (isGamePaused()) {
+		if (isGamePaused() && !isGameOver()) {
 			pauseState.keyPressed(k);
 		} else {
 			if (this.gameStates.get(currentState) != null) {

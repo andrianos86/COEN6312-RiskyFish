@@ -33,17 +33,18 @@ public class PauseState extends GameState {
 		g.setColor(Color.WHITE);
 		g.setFont(font);
 		g.drawString("G A M E  P A U S E D!", 90, 90);
-		g.drawString("Press 'ESC' to continue or 'Q' to Quit Game and return to Main Menu.", 90, 115);
+		g.drawString("Press 'ESC' to Quit Game and return to Main Menu \r\n"
+		    + "Press 'R' to resume the current Game ", 90, 115);
 	}
 
 	@Override
 	public void keyPressed(int k) {
 		if (k == KeyEvent.VK_ESCAPE) {
-			gsm.setPaused(false);
+          gsm.setPaused(false);
+          gsm.setState(GameStateManager.MENUSTATE);
 		}
-		if (k == KeyEvent.VK_Q) {
-			gsm.setPaused(false);
-			gsm.setState(GameStateManager.MENUSTATE);
+		if (k == KeyEvent.VK_R) {
+	       gsm.setPaused(false);
 		}
 
 		// TODO Auto-generated method stub
